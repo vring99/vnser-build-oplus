@@ -529,7 +529,7 @@ jobs:
           cd kernel_workspace
           git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}
           cd susfs4ksu 
-          git checkout ee198784
+          git checkout 64d76241
           cd ../
           git clone https://github.com/ShirkNeko/SukiSU_patch.git
           cd kernel_platform
