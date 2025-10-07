@@ -764,6 +764,9 @@ jobs:
         if: ${{ github.event.inputs.FAST_BUILD == 'true' }}
         id: fast_build
         run: |
+          echo "kernel_workspace/susfs4ksu/kernel_patches/include/linux/susfs_def.h"
+          cat kernel_workspace/susfs4ksu/kernel_patches/include/linux/susfs_def.h
+          echo "kernel_workspace/susfs4ksu/kernel_patches/include/linux/susfs_def.h"
           KERNEL_VERSION="${{ env.KERNEL_VERSION }}"
           cd kernel_workspace/kernel_platform
 
