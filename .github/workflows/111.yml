@@ -468,7 +468,7 @@ jobs:
             SHORT_HASH=${MANUAL_HASH:0:8}
           fi
 
-          KSU_API_VERSION=$(curl -fsSL "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/$BRANCH_NAME/kernel/Makefile" | \
+          KSU_API_VERSION=$(cat "kernel/Makefile" | \
             grep -m1 "KSU_VERSION_API :=" | awk -F'= ' '{print $2}' | tr -d '[:space:]')
 
           if [[ -z "$KSU_API_VERSION" || "$(printf '%s\n' "$KSU_API_VERSION" "3.1.7" | sort -V | head -n1)" != "3.1.7" ]]; then
@@ -480,22 +480,22 @@ jobs:
           GIT_HASH=$(git rev-parse --short HEAD)
           echo "GIT_HASH=$GIT_HASH"
 
-          if [[ -n "$MANUAL_HASH" ]]; then
-            # 有手动 hash 的情况
-            if [[ "$CUSTOM_TAG" == "F" || "$CUSTOM_TAG" == "f" || -z "$CUSTOM_TAG" ]]; then
-              VERSION_FULL="v$KSU_API_VERSION-$SHORT_HASH@$BRANCH_NAME"
-            else
-              VERSION_FULL="v$KSU_API_VERSION-$CUSTOM_TAG@$BRANCH_NAME[$SHORT_HASH]"
-            fi
-          else
-            # 无手动 hash，使用最新 commit
-            if [[ "$CUSTOM_TAG" == "F" || "$CUSTOM_TAG" == "f" || -z "$CUSTOM_TAG" ]]; then
-              VERSION_FULL="v$KSU_API_VERSION-$GIT_HASH@$BRANCH_NAME"
-            else
-              VERSION_FULL="v$KSU_API_VERSION-$CUSTOM_TAG@$BRANCH_NAME[$GIT_HASH]"
-            fi
-          fi
-
+          # if [[ -n "$MANUAL_HASH" ]]; then
+          #   # 有手动 hash 的情况
+          #   if [[ "$CUSTOM_TAG" == "F" || "$CUSTOM_TAG" == "f" || -z "$CUSTOM_TAG" ]]; then
+          #     VERSION_FULL="v$KSU_API_VERSION-$SHORT_HASH@$BRANCH_NAME"
+          #   else
+          #     VERSION_FULL="v$KSU_API_VERSION-$CUSTOM_TAG@$BRANCH_NAME[$SHORT_HASH]"
+          #   fi
+          # else
+          #   # 无手动 hash，使用最新 commit
+          #   if [[ "$CUSTOM_TAG" == "F" || "$CUSTOM_TAG" == "f" || -z "$CUSTOM_TAG" ]]; then
+          #     VERSION_FULL="v$KSU_API_VERSION-$GIT_HASH@$BRANCH_NAME"
+          #   else
+          #     VERSION_FULL="v$KSU_API_VERSION-$CUSTOM_TAG@$BRANCH_NAME[$GIT_HASH]"
+          #   fi
+          # fi
+          VERSION_FULL="v$KSU_API_VERSION-$GIT_HASH@$vring"
           sed -i '/define get_ksu_version_full/,/endef/d' kernel/Makefile
           sed -i '/KSU_VERSION_API :=/d' kernel/Makefile
           sed -i '/KSU_VERSION_FULL :=/d' kernel/Makefile
