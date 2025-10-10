@@ -3,7 +3,7 @@ name:  Build OnePlus_SukiSU Ultra All222
 on:
   workflow_dispatch:  # This allows this workflow to be called from another workflow
 
-    input:
+    inputs:
       HOOK:
         type: choice
         description: "钩子选择"
