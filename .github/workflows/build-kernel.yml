@@ -1,6 +1,6 @@
 name: Build OnePlus_SukiSU Ultra All
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       FILE:
         type: choice
@@ -251,7 +251,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ env.HOME }}/apt-cache
-          key: ${{ runner.os }}-apt-${{ hashFiles('.github/workflows/Build SukiSU Ultra OnePlus.yml') }}
+          key: ${{ runner.os }}-apt-${{ hashFiles('.github/workflows/build-kernel.yml') }}
           restore-keys: |
             ${{ runner.os }}-apt-
 
