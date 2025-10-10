@@ -1,4 +1,4 @@
-name: 编译一加susfs内核
+name:  Build OnePlus_SukiSU Ultra All222
 
 on:
   workflow_dispatch:  # This allows this workflow to be called from another workflow
