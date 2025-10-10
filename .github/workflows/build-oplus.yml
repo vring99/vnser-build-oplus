@@ -3,7 +3,16 @@ name: 编译一加susfs内核
 on:
   workflow_dispatch:  # This allows this workflow to be called from another workflow
 
-
+    input:
+      HOOK:
+        type: choice
+        description: "钩子选择"
+        required: true
+        default: manual
+        options:
+          - kprobe
+          - manual
+          - tracepoint
 
 jobs:
   build-kernel-oplus-sukisu-susfs:
