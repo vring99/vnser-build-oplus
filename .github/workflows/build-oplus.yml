@@ -1,7 +1,4 @@
 name: 编译一加susfs内核
-permissions:
-  contents: write  # Allow writing to repository contents (for pushing tags)
-  actions: write   # Allows triggering actions
 
 on:
   workflow_dispatch:  # This allows this workflow to be called from another workflow
@@ -73,7 +70,7 @@ jobs:
     uses: ./.github/workflows/build-kernel.yml
     secrets: inherit
     with:
-      FILE: ${{ inputs.make_release || false }}
+      FILE: ${{ matrix.file }}
       HOOK: "manual"
       SUSFS_CI: "CI"
       KSU_META: "susfs-main/vring/"
