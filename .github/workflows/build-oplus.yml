@@ -77,3 +77,5 @@ jobs:
       KPM: ${{ matrix.kpm }}
       SCHED: true
       ZRAM: true
+      LSM: true
+      FAST_BUILD: true
