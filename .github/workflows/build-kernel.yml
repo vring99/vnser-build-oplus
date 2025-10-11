@@ -582,7 +582,7 @@ jobs:
           fi
 
       - name: Apply ZRAM
-        if: ${{ inputs.ZRAM == 'true' }}
+        if: ${{ inputs.ZRAM }}
         run: |
           cd kernel_workspace/kernel_platform/common
           cp ../../SukiSU_patch/other/zram/zram_patch/${{ env.KERNEL_VERSION }}/lz4kd.patch ./
@@ -595,7 +595,7 @@ jobs:
           echo 'lz4k_oplus_patch完成'
 
       - name: Apply SCHED
-        if: ${{ inputs.SCHED == 'true' }}
+        if: ${{ inputs.SCHED }}
         run: |
           cd kernel_workspace/kernel_platform/common
           git clone https://github.com/HanKuCha/sched_ext.git
@@ -604,7 +604,7 @@ jobs:
           cd ./kernel/sched
 
       - name: Apply LSM_BBG
-        if: ${{ inputs.LSM == 'true' }}
+        if: ${{ inputs.LSM }}
         run: |
           cd kernel_workspace/kernel_platform/common
           echo "正在启用内核级基带保护支持…"
@@ -728,7 +728,7 @@ jobs:
           grep -q '^CONFIG_LTO_CLANG_THIN=y' "$DEFCONFIG" || echo 'CONFIG_LTO_CLANG_THIN=y' >> "$DEFCONFIG"
 
       - name: Build Kernel FAST
-        if: ${{ inputs.FAST_BUILD == 'true' }}
+        if: ${{ inputs.FAST_BUILD }}
         id: fast_build
         run: |
           KERNEL_VERSION="${{ env.KERNEL_VERSION }}"
@@ -799,7 +799,7 @@ jobs:
           ccache -s
 
       - name: Fallback to Build Kernel
-        if: ${{ inputs.FAST_BUILD == 'false' || steps.fast_build.outputs.fallback == 'true' }}
+        if: ${{ !inputs.FAST_BUILD || steps.fast_build.outputs.fallback}}
         run: |
           cd kernel_workspace
           if [ -f ./kernel_platform/build_with_bazel.py ]; then
@@ -914,7 +914,7 @@ jobs:
           path: ./AnyKernel3/*
 
       - name: Download and Unzip ZRAM
-        if: ${{ inputs.ZRAM == 'true' }}
+        if: ${{ inputs.ZRAM}}
         id: zram_find
         run: |
           set -e
@@ -972,7 +972,7 @@ jobs:
           fi
 
       - name: Upload ZRAM Module
-        if: ${{ inputs.ZRAM == 'true' && steps.zram_find.outputs.upload != 'false' }}
+        if: ${{ inputs.ZRAM  && steps.zram_find.outputs.upload }}
         uses: actions/upload-artifact@v4
         with:
           name: ZRAM-Module_${{ env.KERNEL_VERSION }}_${{ steps.extract_info.outputs.value }}
