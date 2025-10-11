@@ -442,7 +442,7 @@ jobs:
           [[ -n "$CUSTOM_TAG" ]] && echo "自定义版本标识: $CUSTOM_TAG" || echo "自定义版本标识: 未启用"
           [[ -n "$MANUAL_HASH" ]] && echo "手动指定 hash: $MANUAL_HASH" || echo "手动指定 hash: 未启用"
 
-          curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s "$BRANCH_NAME"
+          curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s "51e6a1b6"
           cd ./KernelSU
 
           # 如果指定了手动 hash，就切换到该提交
@@ -452,7 +452,7 @@ jobs:
             SHORT_HASH=${MANUAL_HASH:0:8}
           fi
 
-          KSU_API_VERSION=$(curl -fsSL "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/$BRANCH_NAME/kernel/Makefile" | \
+          KSU_API_VERSION=$(cat "kernel/Makefile" | \
             grep -m1 "KSU_VERSION_API :=" | awk -F'= ' '{print $2}' | tr -d '[:space:]')
           if [[ -z "$KSU_API_VERSION" || "$(printf '%s\n' "$KSU_API_VERSION" "3.1.7" | sort -V | head -n1)" != "3.1.7" ]]; then
             KSU_API_VERSION="3.1.7"
@@ -468,12 +468,8 @@ jobs:
           else
             USE_HASH="$GIT_HASH"
           fi
-          if [[ -z "$CUSTOM_TAG" ]]; then
-            VERSION_FULL="v$KSU_API_VERSION-$USE_HASH@$BRANCH_NAME"
-          else
-            VERSION_FULL="v$KSU_API_VERSION-$CUSTOM_TAG@$BRANCH_NAME[$USE_HASH]"
-          fi
 
+          VERSION_FULL="v$KSU_API_VERSION-$GIT_HASH@vring"
           # 清理并写入 Makefile 版本信息
           sed -i '/define get_ksu_version_full/,/endef/d' kernel/Makefile
           sed -i '/KSU_VERSION_API :=/d' kernel/Makefile
@@ -506,7 +502,25 @@ jobs:
       - name: Apply Patches SukiSU Ultra
         run: |
           cd kernel_workspace
+          
+          SUSFS_BRANCH="gki-${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}"
           git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}
+          
+          cd susfs4ksu
+          if [ "$SUSFS_BRANCH" = "gki-android12-5.10" ]; then
+            git checkout de5c7900
+          elif [ "$SUSFS_BRANCH" = "gki-android13-5.15" ]; then
+            git checkout 36a4ad6d
+          elif [ "$SUSFS_BRANCH" = "gki-android14-6.1" ]; then
+            git checkout 085ce003
+          elif [ "$SUSFS_BRANCH" = "gki-android15-6.6" ]; then
+            git checkout 2598fee8
+          else
+            echo "No specific commit for this"
+            exit 500
+          fi
+          cd ../
+          
           git clone https://github.com/ShirkNeko/SukiSU_patch.git
           cd kernel_platform
           echo "正在拉取susfs补丁"
