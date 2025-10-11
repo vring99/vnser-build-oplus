@@ -1,4 +1,4 @@
-name: Build OnePlus_SukiSU Ultra All
+name: build-kernel
 permissions:
   contents: write  # Allow writing to repository contents (for pushing tags)
   actions: write   # Allows triggering actions
