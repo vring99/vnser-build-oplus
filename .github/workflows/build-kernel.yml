@@ -66,7 +66,7 @@ on:
         default: true
 jobs:
   build:
-    name: ${{ inputs.FAST_BUILD  && ' [FAST]' || '' }}${{ inputs.SCHED  && ' [SCHED]' || '' }}${{ inputs.ZRAM  && ' [ZRAM]' || '' }}${{ inputs.LSM  && ' [LSM]' || '' }}${{ inputs.KPM == 'true' && ' [KPM]' || '' }}For ${{ inputs.FILE }} ${{ inputs.SUFFIX }}
+    name: ${{ inputs.FAST_BUILD  && ' [FAST]' || '' }}${{ inputs.SCHED  && ' [SCHED]' || '' }}${{ inputs.ZRAM  && ' [ZRAM]' || '' }}${{ inputs.LSM  && ' [LSM]' || '' }}${{ inputs.KPM && ' [KPM]' || '' }}For ${{ inputs.FILE }} ${{ inputs.SUFFIX }}
     runs-on: ubuntu-latest
     env:
       CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
