@@ -2,7 +2,12 @@ name:  Build一加SUKISU
 
 on:
   workflow_dispatch:  # This allows this workflow to be called from another workflow
-
+    inputs:
+      KPM:
+        type: boolean
+        description: "是否启用内核模块(KPM)？"
+        required: true
+        default: true
 
 jobs:
   build:
@@ -94,4 +99,4 @@ jobs:
       ZRAM: true
       LSM: true
       FAST_BUILD: true
-      KPM: ${{ matrix.kpm }}
+      KPM: ${{ inputs.KPM }}
