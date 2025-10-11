@@ -10,15 +10,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - file: oneplus_nord_ce4_lite_5g_v
-            kpm: true
-            sched: false
-          - file: oneplus_nord_ce4_v
-            kpm: true
-            sched: false
-          - file: oneplus_nord_4_v
-            kpm: true
-            sched: false
+
+
+
           - file: oneplus_ace_3v_v
             kpm: true
             sched: false
@@ -49,9 +43,7 @@ jobs:
           - file: oneplus_ace3_v
             kpm: true
             sched: false
-          - file: oneplus_open_v
-            kpm: true
-            sched: false
+
           - file: oneplus12_v
             kpm: true
             sched: false
@@ -70,9 +62,7 @@ jobs:
           - file: oneplus_pad2_v
             kpm: true
             sched: true
-          - file: oneplus_nord_5
-            kpm: true
-            sched: true
+
           - file: oneplus_ace5_pro
             kpm: true
             sched: true
