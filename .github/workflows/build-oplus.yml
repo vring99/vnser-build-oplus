@@ -94,3 +94,4 @@ jobs:
       ZRAM: true
       LSM: true
       FAST_BUILD: true
+      KPM: ${{ matrix.kpm }}
