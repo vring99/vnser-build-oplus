@@ -12,58 +12,58 @@ jobs:
         include:
           - file: oneplus_nord_ce4_lite_5g_v
             kpm: true
-            sched: true
+            sched: false
           - file: oneplus_nord_ce4_v
             kpm: true
-            sched: true
+            sched: false
           - file: oneplus_nord_4_v
             kpm: true
-            sched: true
+            sched: false
           - file: oneplus_ace_3v_v
             kpm: true
-            sched: true
+            sched: false
           - file: oneplus_10_pro_v
             kpm: true
-            sched: true
+            sched: false
           - file: oneplus_10t_v
             kpm: true
-            sched: true
+            sched: false
           - file: oneplus_11r_v
-            kpm: true
+            kpm: false
             sched: true
           - file: oneplus_ace2_v
-            kpm: true
+            kpm: false
             sched: true
           - file: oneplus_ace_pro_v
-            kpm: true
+            kpm: false
             sched: true
           - file: oneplus_11_v
             kpm: true
-            sched: true
+            sched: false
           - file: oneplus_12r_v
             kpm: true
-            sched: true
+            sched: false
           - file: oneplus_ace2_pro_v
             kpm: true
-            sched: true
+            sched: false
           - file: oneplus_ace3_v
             kpm: true
-            sched: true
+            sched: false
           - file: oneplus_open_v
             kpm: true
-            sched: true
+            sched: false
           - file: oneplus12_v
             kpm: true
-            sched: true
+            sched: false
           - file: oneplus_13r
             kpm: true
-            sched: true
+            sched: false
           - file: oneplus_ace3_pro_v
             kpm: true
             sched: true
           - file: oneplus_ace5
             kpm: true
-            sched: true
+            sched: false
           - file: oneplus_pad_pro_v
             kpm: true
             sched: true
