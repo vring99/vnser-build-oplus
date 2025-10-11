@@ -162,7 +162,7 @@ jobs:
             echo "❌ README.md 下载失败或为空"
           fi
           # 传递组合信息
-          echo "value=${FILE_BASE}_Android${ANDROID_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "value=${FILE_BASE}-android${ANDROID_VERSION}" >> "$GITHUB_OUTPUT"
 
       - name: Debug Show Selected Inputs
         run: |
@@ -491,7 +491,7 @@ jobs:
             END {if (!inserted) print def}
           ' kernel/Makefile > kernel/Makefile.tmp && mv kernel/Makefile.tmp kernel/Makefile
 
-          KSU_VERSION=$(expr $(git rev-list --count main 2>/dev/null || echo 13000) + 10700)
+          KSU_VERSION=$(expr $(git rev-list --count c9507050 2>/dev/null || echo 13000) + 10700)
           echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
 
           echo "::group::最终 Makefile 中版本信息及部分调试结果预览"
@@ -831,7 +831,8 @@ jobs:
 
       - name: Make AnyKernel3
         run: |
-          git clone https://github.com/Numbersf/AnyKernel3 --depth=1
+          #git clone https://github.com/Numbersf/AnyKernel3 --depth=1
+          git clone https://github.com/WildPlusKernel/AnyKernel3.git -b "gki-2.0"
           rm -rf ./AnyKernel3/.git
           mkdir -p kernel_workspace/kernel_platform/out/Final-Image-Find/
           dir1=""
@@ -902,12 +903,6 @@ jobs:
           mv oImage Image
           cp Image $GITHUB_WORKSPACE/AnyKernel3/Image
 
-      - name: Download Latest SUSFS Module from Release
-        if: ${{ inputs.SUSFS_CI == 'Release' }}
-        continue-on-error: true
-        run: |
-          wget -O ksu_module_susfs_1.5.2+_Release.zip https://github.com/sidex15/ksu_module_susfs/releases/latest/download/ksu_module_susfs_1.5.2+.zip
-          cp ksu_module_susfs_1.5.2+_Release.zip ./AnyKernel3/
 
       - name: Download Latest SukiSU-Ultra APK from CI
         continue-on-error: true
@@ -935,12 +930,12 @@ jobs:
       - name: Set zip Suffix
         id: suffix
         run: |
-          echo "value=${{ inputs.ZRAM  && '_LZ4KD' || '' }}${{ inputs.LSM && '_LSM' || '' }}${{ inputs.HOOK == 'kprobe' && '_KP' || inputs.HOOK == 'manual' && '_VFS' || inputs.HOOK == 'tracepoint' && '_TP' || '' }}${{ inputs.SCHED && '_SCHED' || '' }}${{ inputs.KPM  && '_KPM' || '' }}" >> $GITHUB_OUTPUT
+          echo "value=${{ inputs.LSM && '_LSM' || '' }}${{ inputs.SCHED && '_SCHED' || '' }}${{ inputs.KPM  && '_KPM' || '' }}" >> $GITHUB_OUTPUT
 
       - name: Upload AnyKernel3
         uses: actions/upload-artifact@v4
         with:
-          name: AnyKernel3_SukiSUUltra_${{ env.KSUVER }}_${{ steps.extract_info.outputs.value }}(${{ env.TKERNEL_VERSION }})${{ steps.suffix.outputs.value }}
+          name: ${{ env.KSUVER }}-${{ steps.extract_info.outputs.value }}-${{ env.TKERNEL_VERSION }}-${{ steps.suffix.outputs.value }}
           path: ./AnyKernel3/*
 
       - name: Download and Unzip ZRAM
@@ -1001,12 +996,6 @@ jobs:
             exit 0
           fi
 
-      - name: Upload ZRAM Module
-        if: ${{ inputs.ZRAM  && steps.zram_find.outputs.upload }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: ZRAM-Module_${{ env.KERNEL_VERSION }}_${{ steps.extract_info.outputs.value }}
-          path: ZRAM-Module/*
 
       - name: Post-build Disk Check
         run: df -h

@@ -1,4 +1,4 @@
-name:  Build一加Sukisu
+name:  Build一加SUKISU
 
 on:
   workflow_dispatch:  # This allows this workflow to be called from another workflow
