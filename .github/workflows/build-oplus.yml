@@ -1,11 +1,11 @@
-name:  编译一加内核-sukisu-sufus
+name:  编译一加内核-sukisu
 
 on:
   workflow_dispatch:  # This allows this workflow to be called from another workflow
 
 
 jobs:
-  build-kernel-oplus-sukisu-susfs:
+  build-oplus-sukisu:
     strategy:
       fail-fast: false
       matrix:
