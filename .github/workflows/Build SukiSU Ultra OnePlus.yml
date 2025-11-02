@@ -16,7 +16,69 @@ jobs:
       matrix:
         include:
 
+          - file: oneplus_ace_3v_v
+            kpm: true
+            sched: false
 
+          - file: oneplus_10_pro_v
+            kpm: true
+            sched: false
+
+          - file: oneplus_10t_v
+            kpm: true
+            sched: false
+
+          - file: oneplus_11r_v
+            kpm: false
+            sched: false
+
+          - file: oneplus_ace2_v
+            kpm: false
+            sched: false
+
+          - file: oneplus_ace_pro_v
+            kpm: false
+            sched: false
+
+          - file: oneplus_11_v
+            kpm: true
+            sched: false
+
+          - file: oneplus_12r_v
+            kpm: true
+            sched: false
+
+          - file: oneplus_ace2_pro_v
+            kpm: true
+            sched: false
+
+          - file: oneplus_ace3_v
+            kpm: true
+            sched: false
+
+          - file: oneplus12_v
+            kpm: true
+            sched: false
+
+          - file: oneplus_13r
+            kpm: true
+            sched: false
+
+          - file: oneplus_ace3_pro_v
+            kpm: true
+            sched: false
+
+          - file: oneplus_ace5
+            kpm: true
+            sched: false
+
+          - file: oneplus_pad_pro_v
+            kpm: true
+            sched: false
+
+          - file: oneplus_pad2_v
+            kpm: true
+            sched: false
 
 
 
