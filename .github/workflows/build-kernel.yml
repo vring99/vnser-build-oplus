@@ -89,6 +89,8 @@ jobs:
 
       - name: Extract OnePlus Manifest Info
         id: extract_info
+        env:
+          FILE: ${{ inputs.FILE }}
         run: |
           set -e
           cd "$GITHUB_WORKSPACE"
