@@ -309,7 +309,17 @@ jobs:
           mkdir -p .repo/manifests
           FILE="${{ inputs.FILE }}"
           cp "$GITHUB_WORKSPACE/.repo/manifests_fallback/${FILE}.xml" ".repo/manifests/${FILE}.xml"
-          repo init -u https://github.com/OnePlusOSS/kernel_manifest.git -b oneplus/${{env.CPU}} -m "${FILE}.xml" --repo-rev=v2.16 --depth=1 --no-clone-bundle --no-tags
+
+          MANIFEST_REPO="${{ env.MANIFEST_REPO }}"
+          MANIFEST_BRANCH="${{ env.MANIFEST_BRANCH }}"
+          CPU="${{ env.CPU }}"
+          echo "MANIFEST_REPO=$MANIFEST_REPO"
+          echo "MANIFEST_BRANCH=$MANIFEST_BRANCH"
+
+          BASE_URL="https://github.com/${MANIFEST_REPO}/kernel_manifest.git"
+
+          echo "使用 $MANIFEST_REPO 的分支 $MANIFEST_BRANCH 初始化仓库..."
+          repo init -u "$BASE_URL" -b "$MANIFEST_BRANCH" -m "${FILE}.xml" --repo-rev=v2.16 --depth=1 --no-clone-bundle --no-tags
           repo sync -c -j$(nproc) --no-clone-bundle --no-tags --force-sync
 
           for dir in kernel_platform/common kernel_platform/msm-kernel; do
@@ -676,13 +686,23 @@ jobs:
           echo 'lz4k_oplus_patch完成'
 
       - name: Apply SCHED
+        env:
+          FILE: ${{ inputs.FILE }}
         if: ${{ inputs.SCHED }}
         run: |
           cd kernel_workspace/kernel_platform/common
-          git clone https://github.com/HanKuCha/sched_ext.git
-          cp -r ./sched_ext/* ./kernel/sched
-          rm -rf ./sched_ext/.git
-          cd ./kernel/sched
+          git clone https://github.com/Numbersf/SCHED_PATCH.git -b $CPU
+          echo "正在拉取风驰补丁"
+          cp ./SCHED_PATCH/fengchi_${FILE}.patch ./
+          if [[ -f "fengchi_${FILE}.patch" ]]; then
+            echo "正在打风驰补丁"
+            dos2unix "fengchi_${FILE}.patch"
+            patch -p1 -F 3 < "fengchi_${FILE}.patch"
+            echo "fengchi_patch完成"
+          else
+            echo "❌ 未匹配到补丁，风驰内核暂未支持你的机型，请关闭后重试"
+            exit 11
+          fi
 
       - name: Apply LSM_BBG
         if: ${{ inputs.LSM }}
@@ -690,7 +710,7 @@ jobs:
           cd kernel_workspace/kernel_platform/common
           echo "正在启用内核级基带保护支持…"
           curl -LSs https://raw.githubusercontent.com/vc-teahouse/Baseband-guard/main/setup.sh | bash
-          sed -i '/^config LSM$/,/^help$/{ /^[[:space:]]*default/ { /baseband_guard/! s/bpf/bpf,baseband_guard/ } }' ./security/Kconfig
+          sed -i '/^config LSM$/,/^help$/{ /^[[:space:]]*default/ { /baseband_guard/! s/lockdown/lockdown,baseband_guard/ } }' ./security/Kconfig
 
       # 配置信息,带*为附加项目,具有一定危险性和不确定性
       - name: Add Configuration Settings
@@ -722,6 +742,7 @@ jobs:
           echo "CONFIG_KSU_SUSFS=y" >> "$CONFIG_FILE"
           echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> "$CONFIG_FILE"
           echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SUS_MAP=y" >> "$CONFIG_FILE"
           echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> "$CONFIG_FILE"
           echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> "$CONFIG_FILE"
           echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> "$CONFIG_FILE"
@@ -934,7 +955,7 @@ jobs:
             done
           fi
 
-    
+
 
       - name: Apply patch_linux and replace Image
         if: ${{ inputs.KPM }}
