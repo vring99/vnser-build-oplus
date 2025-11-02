@@ -24,49 +24,49 @@ jobs:
             kpm: true
             sched: true
 
-          - file: oneplus_13
-            kpm: true
-            sched: true
-
-          - file: oneplus_13_global
-            kpm: true
-            sched: true
-
-          - file: oneplus_13t
-            kpm: true
-            sched: true
-
-          - file: oneplus_13s
-            kpm: true
-            sched: true
-
-          - file: oneplus_pad_2_pro
-            kpm: true
-            sched: true
+#          - file: oneplus_13
+#            kpm: true
+#            sched: true
+#
+#          - file: oneplus_13_global
+#            kpm: true
+#            sched: true
+#
+#          - file: oneplus_13t
+#            kpm: true
+#            sched: true
+#
+#          - file: oneplus_13s
+#            kpm: true
+#            sched: true
+#
+#          - file: oneplus_pad_2_pro
+#            kpm: true
+#            sched: true
 
           - file: oneplus_ace5_ultra
             kpm: true
             sched: true
-
-          - file: oneplus_13_w
-            kpm: true
-            sched: true
-
-          - file: oneplus_13t_w
-            kpm: true
-            sched: true
-
-          - file: oneplus_13s_w
-            kpm: true
-            sched: true
-
-          - file: oneplus_pad_3
-            kpm: true
-            sched: true
-
-          - file: oneplus_ace6_w
-            kpm: true
-            sched: true
+#
+#          - file: oneplus_13_w
+#            kpm: true
+#            sched: true
+#
+#          - file: oneplus_13t_w
+#            kpm: true
+#            sched: true
+#
+#          - file: oneplus_13s_w
+#            kpm: true
+#            sched: true
+#
+#          - file: oneplus_pad_3
+#            kpm: true
+#            sched: true
+#
+#          - file: oneplus_ace6_w
+#            kpm: true
+#            sched: true
 
     uses: ./.github/workflows/build-kernel.yml
     secrets: inherit
