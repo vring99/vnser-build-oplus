@@ -493,8 +493,8 @@ jobs:
           [[ -n "$CUSTOM_TAG" ]] && echo "自定义版本标识: $CUSTOM_TAG" || echo "自定义版本标识: 未启用"
           [[ -n "$MANUAL_HASH" ]] && echo "手动指定 hash: $MANUAL_HASH" || echo "手动指定 hash: 未启用"
 
-          #curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s "susfs-main"
-          curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s "c4a60378"
+          curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s "susfs-main"
+          #curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s "c4a60378"
           cd ./KernelSU
 
           # 如果指定了手动 hash，就切换到该提交
@@ -543,8 +543,8 @@ jobs:
             END {if (!inserted) print def}
           ' kernel/Makefile > kernel/Makefile.tmp && mv kernel/Makefile.tmp kernel/Makefile
 
-          KSU_VERSION=$(expr $(git rev-list --count b5e5be25 2>/dev/null || echo 13000) + 10700)
-          #KSU_VERSION=$(expr $(git rev-list --count main 2>/dev/null || echo 13000) + 10700)
+          #KSU_VERSION=$(expr $(git rev-list --count b5e5be25 2>/dev/null || echo 13000) + 10700)
+          KSU_VERSION=$(expr $(git rev-list --count main 2>/dev/null || echo 13000) + 10700)
           echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
 
           echo "::group::最终 Makefile 中版本信息及部分调试结果预览"
