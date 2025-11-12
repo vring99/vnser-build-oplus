@@ -86,6 +86,10 @@ jobs:
             kpm: true
             sched: true
 
+          - file: oneplus_ace5_pro_b
+            kpm: true
+            sched: true
+
           - file: oneplus_13
             kpm: true
             sched: true
@@ -110,15 +114,15 @@ jobs:
             kpm: true
             sched: true
 
-          - file: oneplus_13_w
+          - file: oneplus_13_b
             kpm: true
             sched: true
 
-          - file: oneplus_13t_w
+          - file: oneplus_13t_b
             kpm: true
             sched: true
 
-          - file: oneplus_13s_w
+          - file: oneplus_13s_b
             kpm: true
             sched: true
 
@@ -126,7 +130,11 @@ jobs:
             kpm: true
             sched: true
 
-          - file: oneplus_ace6_w
+          - file: oneplus_ace6
+            kpm: true
+            sched: true
+
+          - file: oneplus_15
             kpm: true
             sched: true
 
