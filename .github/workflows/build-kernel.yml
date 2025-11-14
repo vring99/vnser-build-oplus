@@ -703,9 +703,9 @@ jobs:
         run: |
           cd kernel_workspace/kernel_platform/common
           branch=$CPU
-          if [ "$CPU" = "mt6991" ]; then
-            branch="sm8750"
-          fi
+#          if [ "$CPU" = "mt6991" ]; then
+#            branch="sm8750"
+#          fi
           git clone https://github.com/Numbersf/SCHED_PATCH.git -b $branch
           echo "正在拉取风驰补丁"
           cp ./SCHED_PATCH/fengchi_${FILE}.patch ./
