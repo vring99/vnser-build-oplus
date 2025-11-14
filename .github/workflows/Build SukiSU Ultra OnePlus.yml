@@ -30,7 +30,7 @@ jobs:
             sched: true
 
 
-          - file: oneplus_ace6
+          - file: oneplus_ace_6
             kpm: true
             sched: true
 
