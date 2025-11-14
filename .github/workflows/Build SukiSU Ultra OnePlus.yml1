@@ -1,0 +1,153 @@
+name:  Build一加SUKISU
+
+on:
+  workflow_dispatch:  # This allows this workflow to be called from another workflow
+    inputs:
+      KPM:
+        type: boolean
+        description: "是否启用内核模块(KPM)？"
+        required: true
+        default: true
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+
+          - file: oneplus_ace_3v_v
+            kpm: true
+            sched: false
+
+          - file: oneplus_10_pro_v
+            kpm: true
+            sched: false
+
+          - file: oneplus_10t_v
+            kpm: true
+            sched: false
+
+          - file: oneplus_11r_v
+            kpm: false
+            sched: false
+
+          - file: oneplus_ace2_v
+            kpm: false
+            sched: false
+
+          - file: oneplus_ace_pro_v
+            kpm: false
+            sched: false
+
+          - file: oneplus_11_v
+            kpm: true
+            sched: false
+
+          - file: oneplus_12r_v
+            kpm: true
+            sched: false
+
+          - file: oneplus_ace2_pro_v
+            kpm: true
+            sched: false
+
+          - file: oneplus_ace3_v
+            kpm: true
+            sched: false
+
+          - file: oneplus_12_v
+            kpm: true
+            sched: false
+
+          - file: oneplus_13r
+            kpm: true
+            sched: false
+
+          - file: oneplus_ace3_pro_v
+            kpm: true
+            sched: false
+
+          - file: oneplus_ace5
+            kpm: true
+            sched: false
+
+          - file: oneplus_pad_pro_v
+            kpm: true
+            sched: false
+
+          - file: oneplus_pad2_v
+            kpm: true
+            sched: false
+
+
+
+          - file: oneplus_ace5_pro
+            kpm: true
+            sched: true
+
+          - file: oneplus_ace5_pro_b
+            kpm: true
+            sched: true
+
+          - file: oneplus_13
+            kpm: true
+            sched: true
+
+          - file: oneplus_13_global
+            kpm: true
+            sched: true
+
+          - file: oneplus_13t
+            kpm: true
+            sched: true
+
+          - file: oneplus_13s
+            kpm: true
+            sched: true
+
+          - file: oneplus_pad_2_pro
+            kpm: true
+            sched: true
+
+          - file: oneplus_ace5_ultra
+            kpm: true
+            sched: true
+
+          - file: oneplus_13_b
+            kpm: true
+            sched: true
+
+          - file: oneplus_13t_b
+            kpm: true
+            sched: true
+
+          - file: oneplus_13s_b
+            kpm: true
+            sched: true
+
+          - file: oneplus_pad_3
+            kpm: true
+            sched: true
+
+          - file: oneplus_ace6
+            kpm: true
+            sched: true
+
+          - file: oneplus_15
+            kpm: true
+            sched: true
+
+    uses: ./.github/workflows/build-kernel.yml
+    secrets: inherit
+    with:
+      FILE: ${{ matrix.file }}
+      HOOK: "manual"
+      SUSFS_CI: "CI"
+      KSU_META: "susfs-main/vring/"
+      BUILD_TIME:  "Mon Aug 18 09:30:24 UTC 2025"
+      SCHED: ${{ matrix.sched }}
+      ZRAM: true
+      LSM: true
+      FAST_BUILD: true
+      KPM: ${{ inputs.KPM }}
