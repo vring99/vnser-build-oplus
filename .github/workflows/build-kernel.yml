@@ -1001,11 +1001,12 @@ jobs:
         id: suffix
         run: |
           echo "value=${{ inputs.LSM && '_LSM' || '' }}${{ inputs.SCHED && '_SCHED' || '' }}${{ inputs.KPM  && '_KPM' || '' }}" >> $GITHUB_OUTPUT
+          echo "kpm=${{ inputs.KPM  && '' || 'nkpm' }}" >> $GITHUB_OUTPUT
 
       - name: Upload AnyKernel3
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.KSUVER }}${{ inputs.KPM == 'true' && ''  || 'nkpm' }}-${{ steps.extract_info.outputs.value }}-${{ env.TKERNEL_VERSION }}${{ steps.suffix.outputs.value }}
+          name: ${{ env.KSUVER }}${{ steps.extract_info.outputs.kpm }}-${{ steps.extract_info.outputs.value }}-${{ env.TKERNEL_VERSION }}${{ steps.suffix.outputs.value }}
           path: ./AnyKernel3/*
 
       - name: Download and Unzip ZRAM
