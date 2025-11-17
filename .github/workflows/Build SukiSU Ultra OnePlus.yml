@@ -16,9 +16,9 @@ jobs:
       matrix:
         include:
 
-#          - file: oneplus_ace_3v_v
-#            kpm: true
-#            sched: false
+          - file: oneplus_ace_3v_v
+            kpm: true
+            sched: false
 #
 #          - file: oneplus_10_pro_v
 #            kpm: true
