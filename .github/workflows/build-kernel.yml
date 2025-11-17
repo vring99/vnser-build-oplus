@@ -1005,7 +1005,7 @@ jobs:
       - name: Upload AnyKernel3
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.KSUVER }}${{ inputs.KPM && ''  || 'nkpm' }}-${{ steps.extract_info.outputs.value }}-${{ env.TKERNEL_VERSION }}${{ steps.suffix.outputs.value }}
+          name: ${{ env.KSUVER }}${{ inputs.KPM == 'true' && ''  || 'nkpm' }}-${{ steps.extract_info.outputs.value }}-${{ env.TKERNEL_VERSION }}${{ steps.suffix.outputs.value }}
           path: ./AnyKernel3/*
 
       - name: Download and Unzip ZRAM
