@@ -668,20 +668,20 @@ jobs:
           patch -p1 -F 3 < hmbird_patch.patch
           echo "OGKI转换GKI_patch完成"
 
-      - name: Apply HOOK
-        run: |
-          cd kernel_workspace/kernel_platform/common
-          if [ "${{ inputs.HOOK }}" = "kprobe" ]; then
-            echo "调用 kprobe 钩子"
-          elif [ "${{ inputs.HOOK }}" = "manual" ]; then
-            cp ../../SukiSU_patch/hooks/scope_min_manual_hooks_v1.6.patch ./
-            echo "调用 manual 钩子"
-            patch -p1 -F 3 < scope_min_manual_hooks_v1.6.patch
-          elif [ "${{ inputs.HOOK }}" = "tracepoint" ]; then
-            cp ../../SukiSU_patch/hooks/sukisu_tracepoint_hooks_v1.1.patch ./
-            echo "调用 tracepoint 钩子"
-            patch -p1 -F 3 < sukisu_tracepoint_hooks_v1.1.patch
-          fi
+#      - name: Apply HOOK
+#        run: |
+#          cd kernel_workspace/kernel_platform/common
+#          if [ "${{ inputs.HOOK }}" = "kprobe" ]; then
+#            echo "调用 kprobe 钩子"
+#          elif [ "${{ inputs.HOOK }}" = "manual" ]; then
+#            cp ../../SukiSU_patch/hooks/scope_min_manual_hooks_v1.6.patch ./
+#            echo "调用 manual 钩子"
+#            patch -p1 -F 3 < scope_min_manual_hooks_v1.6.patch
+#          elif [ "${{ inputs.HOOK }}" = "tracepoint" ]; then
+#            cp ../../SukiSU_patch/hooks/sukisu_tracepoint_hooks_v1.1.patch ./
+#            echo "调用 tracepoint 钩子"
+#            patch -p1 -F 3 < sukisu_tracepoint_hooks_v1.1.patch
+#          fi
 
       - name: Apply ZRAM
         if: ${{ inputs.ZRAM }}
@@ -738,17 +738,17 @@ jobs:
           echo "CONFIG_KPM=y" >> "$CONFIG_FILE"
 
           # HOOK配置
-          if [ "${{ inputs.HOOK }}" = "kprobe" ]; then
-            echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> "$CONFIG_FILE"
-            echo "CONFIG_KPROBES=y" >> "$CONFIG_FILE"
-            echo "CONFIG_KSU_KPROBES_HOOK=y" >> "$CONFIG_FILE"
-          elif [ "${{ inputs.HOOK }}" = "manual" ]; then
-            echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> "$CONFIG_FILE"
-            echo "CONFIG_KSU_MANUAL_HOOK=y" >> "$CONFIG_FILE"
-          elif [ "${{ inputs.HOOK }}" = "tracepoint" ]; then
-            echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> "$CONFIG_FILE"
-            echo "CONFIG_KSU_TRACEPOINT_HOOK=y" >> "$CONFIG_FILE" 
-          fi
+#          if [ "${{ inputs.HOOK }}" = "kprobe" ]; then
+#            echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> "$CONFIG_FILE"
+#            echo "CONFIG_KPROBES=y" >> "$CONFIG_FILE"
+#            echo "CONFIG_KSU_KPROBES_HOOK=y" >> "$CONFIG_FILE"
+#          elif [ "${{ inputs.HOOK }}" = "manual" ]; then
+#            echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> "$CONFIG_FILE"
+#            echo "CONFIG_KSU_MANUAL_HOOK=y" >> "$CONFIG_FILE"
+#          elif [ "${{ inputs.HOOK }}" = "tracepoint" ]; then
+#            echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> "$CONFIG_FILE"
+#            echo "CONFIG_KSU_TRACEPOINT_HOOK=y" >> "$CONFIG_FILE"
+#          fi
 
           # SUSFS配置
           echo "CONFIG_KSU_SUSFS=y" >> "$CONFIG_FILE"

@@ -1,4 +1,4 @@
-name:  Build一加SUKISU
+name:  Build一加SUKISU@vring
 
 on:
   workflow_dispatch:  # This allows this workflow to be called from another workflow
