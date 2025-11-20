@@ -1001,7 +1001,7 @@ jobs:
         id: suffix
         run: |
           echo "value=${{ inputs.LSM && '_LSM' || '' }}${{ inputs.SCHED && '_SCHED' || '' }}${{ inputs.KPM  && '_KPM' || '' }}" >> $GITHUB_OUTPUT
-          echo "kpm=${{ inputs.KPM  && '' || 'nkpm' }}" >> $GITHUB_OUTPUT
+          echo "kpm=${{ ! inputs.KPM  && 'nkpm' || '' }}" >> $GITHUB_OUTPUT
 
       - name: Upload AnyKernel3
         uses: actions/upload-artifact@v4
