@@ -134,10 +134,10 @@ jobs:
 #            kpm: true
 #            sched: true
 #
-#          - file: oneplus_ace_6
-#            kpm: true
-#            sched: true
-#
+          - file: oneplus_ace_6
+            kpm: true
+            sched: true
+
 #          - file: oneplus_15
 #            kpm: true
 #            sched: true
