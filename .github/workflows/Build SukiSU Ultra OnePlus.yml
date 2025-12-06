@@ -141,6 +141,9 @@ jobs:
           - file: oneplus_15
             kpm: true
             sched: true
+          - file: oneplus_15_vring
+            kpm: true
+            sched: true
 
     uses: ./.github/workflows/build-kernel.yml
     secrets: inherit
