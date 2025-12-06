@@ -16,131 +16,131 @@ jobs:
       matrix:
         include:
 
-          - file: oneplus_ace_3v_v
-            kpm: true
-            sched: false
-
-          - file: oneplus_10_pro_v
-            kpm: true
-            sched: false
-
-          - file: oneplus_10t_v
-            kpm: true
-            sched: false
-
-          - file: oneplus_11r_v
-            kpm: false
-            sched: false
-
-          - file: oneplus_ace2_v
-            kpm: false
-            sched: false
-
-          - file: oneplus_ace_pro_v
-            kpm: false
-            sched: false
-
-          - file: oneplus_11_v
-            kpm: true
-            sched: false
-
-          - file: oneplus_12r_v
-            kpm: true
-            sched: false
-
-          - file: oneplus_ace2_pro_v
-            kpm: true
-            sched: false
-
-          - file: oneplus_ace3_v
-            kpm: true
-            sched: false
-
-          - file: oneplus_12_v
-            kpm: true
-            sched: false
-
-          - file: oneplus_13r
-            kpm: true
-            sched: false
-
-          - file: oneplus_ace3_pro_v
-            kpm: true
-            sched: false
-
-          - file: oneplus_ace5
-            kpm: true
-            sched: false
-
-          - file: oneplus_pad_pro_v
-            kpm: true
-            sched: false
-
-          - file: oneplus_pad2_v
-            kpm: true
-            sched: false
-
-
-
-          - file: oneplus_ace5_pro
-            kpm: true
-            sched: true
-
-          - file: oneplus_ace5_pro_b
-            kpm: true
-            sched: true
-
-          - file: oneplus_13
-            kpm: true
-            sched: true
-
-          - file: oneplus_13_global
-            kpm: true
-            sched: true
-
-          - file: oneplus_13t
-            kpm: true
-            sched: true
-
-          - file: oneplus_13s
-            kpm: true
-            sched: true
-
-          - file: oneplus_pad_2_pro
-            kpm: true
-            sched: true
-
-          - file: oneplus_pad_2_pro_b
-            kpm: true
-            sched: true
-
-          - file: oneplus_ace5_ultra
-            kpm: true
-            sched: true
-
-          - file: oneplus_13_b
-            kpm: true
-            sched: true
-
-          - file: oneplus_13t_b
-            kpm: true
-            sched: true
-
-          - file: oneplus_13s_b
-            kpm: true
-            sched: true
-
-          - file: oneplus_pad_3
-            kpm: true
-            sched: true
-
-          - file: oneplus_ace_6
-            kpm: true
-            sched: true
-
-          - file: oneplus_15
-            kpm: true
-            sched: true
+#          - file: oneplus_ace_3v_v
+#            kpm: true
+#            sched: false
+#
+#          - file: oneplus_10_pro_v
+#            kpm: true
+#            sched: false
+#
+#          - file: oneplus_10t_v
+#            kpm: true
+#            sched: false
+#
+#          - file: oneplus_11r_v
+#            kpm: false
+#            sched: false
+#
+#          - file: oneplus_ace2_v
+#            kpm: false
+#            sched: false
+#
+#          - file: oneplus_ace_pro_v
+#            kpm: false
+#            sched: false
+#
+#          - file: oneplus_11_v
+#            kpm: true
+#            sched: false
+#
+#          - file: oneplus_12r_v
+#            kpm: true
+#            sched: false
+#
+#          - file: oneplus_ace2_pro_v
+#            kpm: true
+#            sched: false
+#
+#          - file: oneplus_ace3_v
+#            kpm: true
+#            sched: false
+#
+#          - file: oneplus_12_v
+#            kpm: true
+#            sched: false
+#
+#          - file: oneplus_13r
+#            kpm: true
+#            sched: false
+#
+#          - file: oneplus_ace3_pro_v
+#            kpm: true
+#            sched: false
+#
+#          - file: oneplus_ace5
+#            kpm: true
+#            sched: false
+#
+#          - file: oneplus_pad_pro_v
+#            kpm: true
+#            sched: false
+#
+#          - file: oneplus_pad2_v
+#            kpm: true
+#            sched: false
+#
+#
+#
+#          - file: oneplus_ace5_pro
+#            kpm: true
+#            sched: true
+#
+#          - file: oneplus_ace5_pro_b
+#            kpm: true
+#            sched: true
+#
+#          - file: oneplus_13
+#            kpm: true
+#            sched: true
+#
+#          - file: oneplus_13_global
+#            kpm: true
+#            sched: true
+#
+#          - file: oneplus_13t
+#            kpm: true
+#            sched: true
+#
+#          - file: oneplus_13s
+#            kpm: true
+#            sched: true
+#
+#          - file: oneplus_pad_2_pro
+#            kpm: true
+#            sched: true
+#
+#          - file: oneplus_pad_2_pro_b
+#            kpm: true
+#            sched: true
+#
+#          - file: oneplus_ace5_ultra
+#            kpm: true
+#            sched: true
+#
+#          - file: oneplus_13_b
+#            kpm: true
+#            sched: true
+#
+#          - file: oneplus_13t_b
+#            kpm: true
+#            sched: true
+#
+#          - file: oneplus_13s_b
+#            kpm: true
+#            sched: true
+#
+#          - file: oneplus_pad_3
+#            kpm: true
+#            sched: true
+#
+#          - file: oneplus_ace_6
+#            kpm: true
+#            sched: true
+#
+#          - file: oneplus_15
+#            kpm: true
+#            sched: true
           - file: oneplus_15_vring
             kpm: true
             sched: true
