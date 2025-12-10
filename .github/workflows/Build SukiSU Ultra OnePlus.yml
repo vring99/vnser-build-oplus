@@ -2,12 +2,7 @@ name:  Build一加SUKISU@vring
 
 on:
   workflow_dispatch:  # This allows this workflow to be called from another workflow
-    inputs:
-      KPM:
-        type: boolean
-        description: "是否启用内核模块(KPM)？"
-        required: true
-        default: true
+
 
 jobs:
   build:
@@ -16,43 +11,115 @@ jobs:
       matrix:
         include:
 
-          - file: oneplus_ace_3v_v
+          #天玑
+
+          #5.10
+          - file: oneplus_ace2v_v
             kpm: true
             sched: false
 
+          - file: oneplus_ace2v_v
+            kpm: false
+            sched: false
+
+          - file: oneplus_pad_v
+            kpm: true
+            sched: false
+
+          - file: oneplus_ace5_race
+            kpm: true
+            sched: false
+
+          - file: oneplus_ace5_ultra
+            kpm: true
+            sched: true
+
+          #骁龙
+          #5.10
           - file: oneplus_10_pro_v
             kpm: true
             sched: false
-
+          #5.10
           - file: oneplus_10t_v
             kpm: true
             sched: false
-
+          #5.10
           - file: oneplus_11r_v
-            kpm: false
+            kpm: true
             sched: false
-
+          #5.10
           - file: oneplus_ace2_v
-            kpm: false
+            kpm: true
             sched: false
-
+          #5.10
           - file: oneplus_ace_pro_v
-            kpm: false
+            kpm: true
             sched: false
-
+          #5.15
           - file: oneplus_11_v
             kpm: true
             sched: false
-
+          #5.15
           - file: oneplus_12r_v
             kpm: true
             sched: false
-
+          #5.15
           - file: oneplus_ace2_pro_v
             kpm: true
             sched: false
-
+          #5.15
           - file: oneplus_ace3_v
+            kpm: true
+            sched: false
+
+          - file: oneplus_ace3_b
+            kpm: true
+            sched: false
+
+         #关kpm
+          - file: oneplus_10_pro_v
+            kpm: false
+            sched: false
+          #5.10
+          - file: oneplus_10t_v
+            kpm: false
+            sched: false
+          #5.10
+          - file: oneplus_11r_v
+            kpm: false
+            sched: false
+          #5.10
+          - file: oneplus_ace2_v
+            kpm: false
+            sched: false
+          #5.10
+          - file: oneplus_ace_pro_v
+            kpm: false
+            sched: false
+          #5.15
+          - file: oneplus_11_v
+            kpm: false
+            sched: false
+          #5.15
+          - file: oneplus_12r_v
+            kpm: false
+            sched: false
+          #5.15
+          - file: oneplus_ace2_pro_v
+            kpm: false
+            sched: false
+          #5.15
+          - file: oneplus_ace3_v
+            kpm: false
+            sched: false
+
+          - file: oneplus_ace3_b
+            kpm: false
+            sched: false
+
+
+          #6系
+          - file: oneplus_ace_3v_v
             kpm: true
             sched: false
 
@@ -65,6 +132,10 @@ jobs:
             sched: false
 
           - file: oneplus_13r
+            kpm: true
+            sched: false
+
+          - file: oneplus_13r_b
             kpm: true
             sched: false
 
@@ -84,6 +155,11 @@ jobs:
             kpm: true
             sched: false
 
+
+          - file: oneplus_pad_pro
+            kpm: true
+            sched: false
+
           - file: oneplus_pad_pro_v
             kpm: true
             sched: false
@@ -100,21 +176,12 @@ jobs:
             kpm: true
             sched: true
 
-          - file: oneplus_13
-            kpm: true
-            sched: true
 
           - file: oneplus_13_global
             kpm: true
             sched: true
 
-          - file: oneplus_13t
-            kpm: true
-            sched: true
 
-          - file: oneplus_13s
-            kpm: true
-            sched: true
 
           - file: oneplus_pad_2_pro
             kpm: true
@@ -124,15 +191,25 @@ jobs:
             kpm: true
             sched: true
 
-          - file: oneplus_ace5_ultra
+          - file: oneplus_13
             kpm: true
             sched: true
+
 
           - file: oneplus_13_b
             kpm: true
             sched: true
 
+          - file: oneplus_13t
+            kpm: true
+            sched: true
+
           - file: oneplus_13t_b
+            kpm: true
+            sched: true
+
+
+          - file: oneplus_13s
             kpm: true
             sched: true
 
@@ -143,7 +220,11 @@ jobs:
           - file: oneplus_pad_3
             kpm: true
             sched: true
-#
+
+          - file: oneplus_pad_3_b
+            kpm: true
+            sched: true
+
           - file: oneplus_ace_6
             kpm: true
             sched: true
