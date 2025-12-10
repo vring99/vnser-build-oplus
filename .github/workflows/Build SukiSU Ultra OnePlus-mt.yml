@@ -2,12 +2,7 @@ name:  Build一加SUKISU-MT@vring
 
 on:
   workflow_dispatch:  # This allows this workflow to be called from another workflow
-    inputs:
-      KPM:
-        type: boolean
-        description: "是否启用内核模块(KPM)？"
-        required: true
-        default: true
+
 
 jobs:
   build:
@@ -88,17 +83,10 @@ jobs:
             kpm: true
             sched: true
 
-#
           - file: oneplus_ace_6
             kpm: true
             sched: true
 
-#          - file: oneplus_15
-#            kpm: true
-#            sched: true
-#          - file: oneplus_15_vring
-#            kpm: true
-#            sched: false
 
     uses: ./.github/workflows/build-kernel.yml
     secrets: inherit
@@ -112,5 +100,5 @@ jobs:
       ZRAM: false
       LSM: true
       FAST_BUILD: true
-      KPM: ${{ inputs.KPM }}
+      KPM: ${{ matrix.kpm }}
       IPV6: false
