@@ -248,5 +248,5 @@ jobs:
       ZRAM: false
       LSM: true
       FAST_BUILD: true
-      KPM: ${{ inputs.KPM }}
+      KPM: ${{ matrix.kpm }}
       IPV6: true
