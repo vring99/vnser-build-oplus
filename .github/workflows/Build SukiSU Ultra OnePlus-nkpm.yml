@@ -1,4 +1,4 @@
-name:  Build一加SUKISU@vring-nkpm
+name:  Build一加SUKISU-nkpm@vring
 
 on:
   workflow_dispatch:  # This allows this workflow to be called from another workflow
@@ -46,14 +46,6 @@ jobs:
 
 
 
-
-
-
-
-
-
-
-
     uses: ./.github/workflows/build-kernel.yml
     secrets: inherit
     with:
@@ -67,3 +59,4 @@ jobs:
       LSM: true
       FAST_BUILD: true
       KPM: false
+      IPV6: true

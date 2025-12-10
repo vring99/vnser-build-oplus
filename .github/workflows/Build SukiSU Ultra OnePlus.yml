@@ -60,6 +60,10 @@ jobs:
             kpm: true
             sched: false
 
+          - file: oneplus_12_b
+            kpm: true
+            sched: false
+
           - file: oneplus_13r
             kpm: true
             sched: false
@@ -68,7 +72,15 @@ jobs:
             kpm: true
             sched: false
 
+          - file: oneplus_ace3_pro
+            kpm: true
+            sched: false
+
           - file: oneplus_ace5
+            kpm: true
+            sched: false
+
+          - file: oneplus_ace5_b
             kpm: true
             sched: false
 
@@ -156,3 +168,4 @@ jobs:
       LSM: true
       FAST_BUILD: true
       KPM: ${{ inputs.KPM }}
+      IPV6: true

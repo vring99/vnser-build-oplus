@@ -1,0 +1,116 @@
+name:  Build一加SUKISU-MT@vring
+
+on:
+  workflow_dispatch:  # This allows this workflow to be called from another workflow
+    inputs:
+      KPM:
+        type: boolean
+        description: "是否启用内核模块(KPM)？"
+        required: true
+        default: true
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+
+
+          - file: oneplus_10_pro_v
+            kpm: true
+            sched: false
+
+          - file: oneplus_10_pro_v
+            kpm: false
+            sched: false
+
+
+          - file: oneplus_ace2_v
+            kpm: true
+            sched: false
+
+          - file: oneplus_ace2_v
+            kpm: false
+            sched: false
+
+          - file: oneplus_ace_pro_v
+            kpm: true
+            sched: false
+
+          - file: oneplus_ace_pro_v
+            kpm: false
+            sched: false
+
+          - file: oneplus_ace2_pro_v
+            kpm: true
+            sched: false
+
+          - file: oneplus_ace2_pro_v
+            kpm: false
+            sched: false
+
+
+          - file: oneplus_ace3_v
+            kpm: true
+            sched: false
+
+          - file: oneplus_ace3_v
+            kpm: false
+            sched: false
+
+          - file: oneplus_ace3_b
+            kpm: true
+            sched: false
+
+          - file: oneplus_ace3_b
+            kpm: false
+            sched: false
+
+
+          - file: oneplus_ace5
+            kpm: true
+            sched: false
+
+
+          - file: oneplus_pad_pro_v
+            kpm: true
+            sched: false
+
+
+
+          - file: oneplus_pad2_v
+            kpm: true
+            sched: false
+
+
+          - file: oneplus_ace5_ultra
+            kpm: true
+            sched: true
+
+#
+          - file: oneplus_ace_6
+            kpm: true
+            sched: true
+
+#          - file: oneplus_15
+#            kpm: true
+#            sched: true
+#          - file: oneplus_15_vring
+#            kpm: true
+#            sched: false
+
+    uses: ./.github/workflows/build-kernel.yml
+    secrets: inherit
+    with:
+      FILE: ${{ matrix.file }}
+      HOOK: "manual"
+      SUSFS_CI: "CI"
+      KSU_META: "susfs-main/vring/"
+      BUILD_TIME:  "Mon Aug 18 09:30:24 UTC 2024"
+      SCHED: ${{ matrix.sched }}
+      ZRAM: false
+      LSM: true
+      FAST_BUILD: true
+      KPM: ${{ inputs.KPM }}
+      IPV6: false

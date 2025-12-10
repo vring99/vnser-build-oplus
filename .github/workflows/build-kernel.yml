@@ -781,7 +781,7 @@ jobs:
           fi
 
           # IPSET & IPv6_NAT配置*
-          if [[ "${CPU}" == sm* ]]; then
+          if [[ "${CPU}" == sm*  && "${{ inputs.IPV6 }}" = "true"]]; then
             echo "CONFIG_BPF_STREAM_PARSER=y" >> "$CONFIG_FILE"
             echo "CONFIG_NETFILTER_XT_MATCH_ADDRTYPE=y" >> "$CONFIG_FILE"
             echo "CONFIG_NETFILTER_XT_SET=y" >> "$CONFIG_FILE"
