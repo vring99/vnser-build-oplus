@@ -64,6 +64,11 @@ on:
         description: "是否启用内核模块(KPM)？"
         required: true
         default: true
+      IPV6:
+        type: boolean
+        description: "是否优化ipv6？"
+        required: false
+        default: true
 jobs:
   build:
     name: ${{ inputs.SCHED  && ' [SCHED]' || '' }}${{ inputs.LSM  && ' [LSM]' || '' }}${{ inputs.KPM && ' [KPM]' || '' }}For ${{ inputs.FILE }} ${{ inputs.SUFFIX }}
@@ -494,7 +499,7 @@ jobs:
           [[ -n "$MANUAL_HASH" ]] && echo "手动指定 hash: $MANUAL_HASH" || echo "手动指定 hash: 未启用"
 
           curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s "builtin"
-          #curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s "c4a60378"
+        
           cd ./KernelSU
 
           # 如果指定了手动 hash，就切换到该提交
@@ -740,6 +745,7 @@ jobs:
           echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> "$CONFIG_FILE"
           echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> "$CONFIG_FILE"
           echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> "$CONFIG_FILE"
+
 
           # TMPFS配置*
           echo "CONFIG_TMPFS_XATTR=y" >> "$CONFIG_FILE"

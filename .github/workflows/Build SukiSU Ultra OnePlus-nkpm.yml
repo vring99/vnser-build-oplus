@@ -36,8 +36,6 @@ jobs:
             kpm: true
             sched: false
 
-
-
           - file: oneplus_ace2_pro_v
             kpm: true
             sched: false
