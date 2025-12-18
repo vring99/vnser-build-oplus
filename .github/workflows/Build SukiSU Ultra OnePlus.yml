@@ -14,13 +14,7 @@ jobs:
           #天玑
 
           #5.10
-          - file: oneplus_ace2v_v
-            kpm: true
-            sched: false
 
-          - file: oneplus_ace2v_v
-            kpm: false
-            sched: false
 
           - file: oneplus_pad_v
             kpm: true
@@ -59,8 +53,14 @@ jobs:
           - file: oneplus_11_v
             kpm: true
             sched: false
+          - file: oneplus_11_b
+            kpm: true
+            sched: false
           #5.15
           - file: oneplus_12r_v
+            kpm: true
+            sched: false
+          - file: oneplus_12r_b
             kpm: true
             sched: false
           #5.15
