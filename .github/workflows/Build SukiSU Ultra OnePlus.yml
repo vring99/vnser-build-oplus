@@ -100,8 +100,14 @@ jobs:
           - file: oneplus_11_v
             kpm: false
             sched: false
+          - file: oneplus_11_b
+            kpm: false
+            sched: false
           #5.15
           - file: oneplus_12r_v
+            kpm: false
+            sched: false
+          - file: oneplus_12r_b
             kpm: false
             sched: false
           #5.15
