@@ -45,7 +45,11 @@ jobs:
 #            kpm: true
 #            sched: false
 
-          - file: oneplus_ace5_race
+#          - file: oneplus_ace5_race
+#            kpm: true
+#            sched: false
+#
+          - file: oneplus_ace5_ultra_b
             kpm: true
             sched: false
 
@@ -98,9 +102,9 @@ jobs:
 #            kpm: true
 #            sched: false
 #          #5.15
-          - file: oneplus_ace3_v
-            kpm: true
-            sched: false
+#          - file: oneplus_ace3_v
+#            kpm: true
+#            sched: false
 #
 #          - file: oneplus_ace3_b
 #            kpm: true
@@ -119,9 +123,9 @@ jobs:
 #            kpm: false
 #            sched: false
           #5.10
-          - file: oneplus_ace2_v
-            kpm: false
-            sched: false
+#          - file: oneplus_ace2_v
+#            kpm: false
+#            sched: false
           #5.10
 #          - file: oneplus_ace_pro_v
 #            kpm: false
@@ -232,17 +236,17 @@ jobs:
 #            sched: true
 
 
-          - file: oneplus_13_b
-            kpm: true
-            sched: true
+#          - file: oneplus_13_b
+#            kpm: true
+#            sched: true
 
 #          - file: oneplus_13t
 #            kpm: true
 #            sched: true
 
-          - file: oneplus_13t_b
-            kpm: true
-            sched: true
+#          - file: oneplus_13t_b
+#            kpm: true
+#            sched: true
 #
 #
 #          - file: oneplus_13s
