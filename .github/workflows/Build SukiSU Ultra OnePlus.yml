@@ -118,11 +118,11 @@ jobs:
           - file: oneplus_11r_v
             kpm: false
             sched: false
-          5.10
+         # 5.10
           - file: oneplus_ace2_v
             kpm: false
             sched: false
-          5.10
+          #5.10
           - file: oneplus_ace_pro_v
             kpm: false
             sched: false
