@@ -782,9 +782,9 @@ jobs:
           if [ "${{ inputs.LSM }}" = "true" ]; then
             echo "CONFIG_BBG=y" >> "$CONFIG_FILE"
           fi
-
+          IPV6="${{ inputs.IPV6 }}"
           # IPSET & IPv6_NAT配置*
-          if [[ "${CPU}" == sm* ]]; then
+          if [[ "${CPU}" == sm*  && "${IPV6}" = "true" ]]; then
             echo "CONFIG_BPF_STREAM_PARSER=y" >> "$CONFIG_FILE"
             echo "CONFIG_NETFILTER_XT_MATCH_ADDRTYPE=y" >> "$CONFIG_FILE"
             echo "CONFIG_NETFILTER_XT_SET=y" >> "$CONFIG_FILE"
@@ -816,7 +816,8 @@ jobs:
       - name: Fix IPv6_NAT Error
         run: |
           cd kernel_workspace/kernel_platform/common
-          if [[ "${CPU}" == sm* ]]; then
+          # IPSET & IPv6_NAT配置*
+          if [[ "${CPU}" == sm*  && "${IPV6}" = "true" ]]; then
             echo "修复启用IPv6 NAT后可能出现的设备误报…"
             wget https://github.com/Numbersf/Action-Build/raw/SukiSU-Ultra/patches/IPv6_NAT_FIX.patch
             patch -p1 -F 3 < IPv6_NAT_FIX.patch
