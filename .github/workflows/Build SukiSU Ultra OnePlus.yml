@@ -41,13 +41,13 @@ jobs:
 #            kpm: false
 #            sched: false
 #
-#          - file: oneplus_pad
-#            kpm: true
-#            sched: false
+          - file: oneplus_pad
+            kpm: true
+            sched: false
 
-#          - file: oneplus_ace5_race
-#            kpm: true
-#            sched: false
+          - file: oneplus_ace5_race_b
+            kpm: true
+            sched: false
 #
           - file: oneplus_ace5_ultra_b
             kpm: true
