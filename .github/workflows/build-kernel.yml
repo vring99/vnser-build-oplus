@@ -817,6 +817,7 @@ jobs:
         run: |
           cd kernel_workspace/kernel_platform/common
           # IPSET & IPv6_NAT配置*
+          IPV6="${{ inputs.IPV6 }}"
           if [[ "${CPU}" == sm*  && "${IPV6}" = "true" ]]; then
             echo "修复启用IPv6 NAT后可能出现的设备误报…"
             wget https://github.com/Numbersf/Action-Build/raw/SukiSU-Ultra/patches/IPv6_NAT_FIX.patch
