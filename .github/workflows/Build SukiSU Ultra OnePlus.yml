@@ -49,9 +49,9 @@ jobs:
             kpm: true
             sched: false
 #
-          - file: oneplus_ace5_ultra_b
-            kpm: true
-            sched: false
+#          - file: oneplus_ace5_ultra_b
+#            kpm: true
+#            sched: false
 
 #          - file: oneplus_ace5_ultra
 #            kpm: true
