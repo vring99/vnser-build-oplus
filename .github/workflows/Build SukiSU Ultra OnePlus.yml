@@ -16,61 +16,61 @@ jobs:
           #5.10
 
 
-          - file: oneplus_ace_v
-            kpm: true
-            sched: false
-            ipv6: false
-          - file: oneplus_ace_v
-            kpm: false
-            sched: false
-            ipv6: false
-
-          - file: oneplus_ace_rate_v
-            kpm: true
-            sched: false
-            ipv6: false
-          - file: oneplus_ace_rate_v
-            kpm: false
-            sched: false
-            ipv6: false
-          - file: oneplus_ace_2_v_v
-            kpm: true
-            sched: false
-            ipv6: false
-          - file: oneplus_ace_2_v_v
-            kpm: false
-            sched: false
-            ipv6: false
-          - file: oneplus_pad
-            kpm: true
-            sched: false
-            ipv6: false
-
-          - file: oneplus_ace5_race_b
-            kpm: true
-            sched: false
-            ipv6: false
-
-          - file: oneplus_ace5_ultra_b
-            kpm: true
-            sched: false
-            ipv6: false
-
-          - file: oneplus_ace5_ultra
-            kpm: true
-            sched: true
-            ipv6: false
-          - file: oneplus_pad2_mt6991_b
-            kpm: true
-            sched: true
-            ipv6: false
-
-          #骁龙
-          #5.10
-          - file: oneplus_10_pro_v
-            kpm: true
-            sched: false
-            ipv6: true
+#          - file: oneplus_ace_v
+#            kpm: true
+#            sched: false
+#            ipv6: false
+#          - file: oneplus_ace_v
+#            kpm: false
+#            sched: false
+#            ipv6: false
+#
+#          - file: oneplus_ace_rate_v
+#            kpm: true
+#            sched: false
+#            ipv6: false
+#          - file: oneplus_ace_rate_v
+#            kpm: false
+#            sched: false
+#            ipv6: false
+#          - file: oneplus_ace_2_v_v
+#            kpm: true
+#            sched: false
+#            ipv6: false
+#          - file: oneplus_ace_2_v_v
+#            kpm: false
+#            sched: false
+#            ipv6: false
+#          - file: oneplus_pad
+#            kpm: true
+#            sched: false
+#            ipv6: false
+#
+#          - file: oneplus_ace5_race_b
+#            kpm: true
+#            sched: false
+#            ipv6: false
+#
+#          - file: oneplus_ace5_ultra_b
+#            kpm: true
+#            sched: false
+#            ipv6: false
+#
+#          - file: oneplus_ace5_ultra
+#            kpm: true
+#            sched: true
+#            ipv6: false
+#          - file: oneplus_pad2_mt6991_b
+#            kpm: true
+#            sched: true
+#            ipv6: false
+#
+#          #骁龙
+#          #5.10
+#          - file: oneplus_10_pro_v
+#            kpm: true
+#            sched: false
+#            ipv6: true
           #5.10
 #          - file: oneplus_10t_v
 #            kpm: true
@@ -275,6 +275,11 @@ jobs:
 #            kpm: true
 #            sched: true
 #            ipv6: true
+
+          - file: oneplus_13_b
+            kpm: true
+            sched: true
+            ipv6: true
 #
 #
 #          - file: oneplus_13_b
