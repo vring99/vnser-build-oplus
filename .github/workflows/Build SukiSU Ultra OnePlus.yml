@@ -112,10 +112,10 @@ jobs:
 #            sched: false
 #            ipv6: true
 #          #5.15
-          - file: oneplus_ace2_pro_v
-            kpm: true
-            sched: false
-            ipv6: true
+#          - file: oneplus_ace2_pro_v
+#            kpm: true
+#            sched: false
+#            ipv6: true
 
           - file: oneplus_ace2_pro_b
             kpm: true
@@ -184,6 +184,7 @@ jobs:
             kpm: false
             sched: false
             ipv6: true
+
 #          #5.15
 #          - file: oneplus_ace3_v
 #            kpm: false
@@ -231,7 +232,7 @@ jobs:
           - file: oneplus_ace3_pro_b
             kpm: true
             sched: false
-            ipv6: false
+            ipv6: true
 
 #
 #          - file: oneplus_ace5

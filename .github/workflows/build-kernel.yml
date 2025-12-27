@@ -568,22 +568,22 @@ jobs:
           SUSFS_BRANCH="gki-${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}"
           git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}
           
-          #cd susfs4ksu
-          #if [ "$SUSFS_BRANCH" = "gki-android12-5.10" ]; then
-          #  git checkout 4d97edca
-          #elif [ "$SUSFS_BRANCH" = "gki-android13-5.15" ]; then
-          #  git checkout fbf90939
-          #elif [ "$SUSFS_BRANCH" = "gki-android14-6.1" ]; then
-          #  git checkout 90f02fc9
-          #elif [ "$SUSFS_BRANCH" = "gki-android15-6.6" ]; then
-           # git checkout 3b9bb9f3
-          #elif [ "$SUSFS_BRANCH" = "gki-android16-6.12" ]; then
-           # git checkout 30831851
-          #else
-          #  echo "No specific commit for this"
-          #  exit 500
-          #fi
-          #cd ../
+          cd susfs4ksu
+          if [ "$SUSFS_BRANCH" = "gki-android12-5.10" ]; then
+            git checkout 4d97edca
+          elif [ "$SUSFS_BRANCH" = "gki-android13-5.15" ]; then
+            git checkout fbf90939
+          elif [ "$SUSFS_BRANCH" = "gki-android14-6.1" ]; then
+            git checkout 90f02fc9
+          elif [ "$SUSFS_BRANCH" = "gki-android15-6.6" ]; then
+            git checkout 3b9bb9f3
+          elif [ "$SUSFS_BRANCH" = "gki-android16-6.12" ]; then
+            git checkout 30831851
+          else
+            echo "No specific commit for this"
+            exit 500
+          fi
+          cd ../
           
           git clone https://github.com/ShirkNeko/SukiSU_patch.git
           cd kernel_platform
@@ -712,7 +712,8 @@ jobs:
         run: |
           cd kernel_workspace/kernel_platform/common
           echo "正在启用内核级基带保护支持…"
-          curl -LSs https://raw.githubusercontent.com/vc-teahouse/Baseband-guard/main/setup.sh | bash
+          #curl -LSs https://raw.githubusercontent.com/vc-teahouse/Baseband-guard/main/setup.sh | bash
+          curl -LSs https://raw.githubusercontent.com/vc-teahouse/Baseband-guard/75668b6cbd039df0d224e9d14b2a3941c602fd1c/setup.sh | bash
           sed -i '/^config LSM$/,/^help$/{ /^[[:space:]]*default/ { /baseband_guard/! s/lockdown/lockdown,baseband_guard/ } }' ./security/Kconfig
 
       # 配置信息,带*为附加项目,具有一定危险性和不确定性
