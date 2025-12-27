@@ -231,7 +231,7 @@ jobs:
           - file: oneplus_ace3_pro_b
             kpm: true
             sched: false
-            ipv6: true
+            ipv6: false
 
 #
 #          - file: oneplus_ace5
