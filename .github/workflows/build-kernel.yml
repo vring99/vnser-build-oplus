@@ -568,22 +568,22 @@ jobs:
           SUSFS_BRANCH="gki-${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}"
           git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}
           
-          cd susfs4ksu
-          if [ "$SUSFS_BRANCH" = "gki-android12-5.10" ]; then
-            git checkout 4d97edca
-          elif [ "$SUSFS_BRANCH" = "gki-android13-5.15" ]; then
-            git checkout fbf90939
-          elif [ "$SUSFS_BRANCH" = "gki-android14-6.1" ]; then
-            git checkout 90f02fc9
-          elif [ "$SUSFS_BRANCH" = "gki-android15-6.6" ]; then
-            git checkout 3b9bb9f3
-          elif [ "$SUSFS_BRANCH" = "gki-android16-6.12" ]; then
-            git checkout 30831851
-          else
-            echo "No specific commit for this"
-            exit 500
-          fi
-          cd ../
+#          cd susfs4ksu
+#          if [ "$SUSFS_BRANCH" = "gki-android12-5.10" ]; then
+#            git checkout 4d97edca
+#          elif [ "$SUSFS_BRANCH" = "gki-android13-5.15" ]; then
+#            git checkout fbf90939
+#          elif [ "$SUSFS_BRANCH" = "gki-android14-6.1" ]; then
+#            git checkout 90f02fc9
+#          elif [ "$SUSFS_BRANCH" = "gki-android15-6.6" ]; then
+#            git checkout 3b9bb9f3
+#          elif [ "$SUSFS_BRANCH" = "gki-android16-6.12" ]; then
+#            git checkout 30831851
+#          else
+#            echo "No specific commit for this"
+#            exit 500
+#          fi
+#          cd ../
           
           git clone https://github.com/ShirkNeko/SukiSU_patch.git
           cd kernel_platform
