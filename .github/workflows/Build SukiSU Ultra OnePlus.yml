@@ -141,6 +141,11 @@ jobs:
 #            kpm: false
 #            sched: false
 #            ipv6: true
+
+          - file: oneplus_ace2_v
+            kpm: false
+            sched: false
+            ipv6: true
 #          #5.10
 #          - file: oneplus_11r_v
 #            kpm: false
