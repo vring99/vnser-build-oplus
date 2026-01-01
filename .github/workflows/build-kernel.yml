@@ -730,7 +730,8 @@ jobs:
         run: |
           cd kernel_workspace/kernel_platform/common
           echo "正在启用内核级基带保护支持…"
-          curl -LSs https://raw.githubusercontent.com/vc-teahouse/Baseband-guard/main/setup.sh | bash
+          #curl -LSs https://raw.githubusercontent.com/vc-teahouse/Baseband-guard/main/setup.sh | bash
+          curl -LSs https://raw.githubusercontent.com/vnser/Baseband-guard/main/setup.sh | bash
           sed -i '/^config LSM$/,/^help$/{ /^[[:space:]]*default/ { /baseband_guard/! s/lockdown/lockdown,baseband_guard/ } }' ./security/Kconfig
 
       # 配置信息,带*为附加项目,具有一定危险性和不确定性
@@ -800,9 +801,9 @@ jobs:
           if [ "${{ inputs.LSM }}" = "true" ]; then
             echo "CONFIG_BBG=y" >> "$CONFIG_FILE"
           fi
-
+          IPV6="${{ inputs.IPV6 }}"
           # IPSET & IPv6_NAT配置*
-          if [[ "${CPU}" == sm* ]]; then
+          if [[ "${CPU}" == sm*  && "${IPV6}" = "true" ]]; then
             echo "CONFIG_BPF_STREAM_PARSER=y" >> "$CONFIG_FILE"
             echo "CONFIG_NETFILTER_XT_MATCH_ADDRTYPE=y" >> "$CONFIG_FILE"
             echo "CONFIG_NETFILTER_XT_SET=y" >> "$CONFIG_FILE"
@@ -834,7 +835,9 @@ jobs:
       - name: Fix IPv6_NAT Error
         run: |
           cd kernel_workspace/kernel_platform/common
-          if [[ "${CPU}" == sm* ]]; then
+          # IPSET & IPv6_NAT配置*
+          IPV6="${{ inputs.IPV6 }}"
+          if [[ "${CPU}" == sm*  && "${IPV6}" = "true" ]]; then
             echo "修复启用IPv6 NAT后可能出现的设备误报…"
             wget https://github.com/Numbersf/Action-Build/raw/SukiSU-Ultra/patches/IPv6_NAT_FIX.patch
             patch -p1 -F 3 < IPv6_NAT_FIX.patch
