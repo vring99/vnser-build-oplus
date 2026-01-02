@@ -378,7 +378,12 @@ jobs:
             echo "Kernel Version:$ORIG_VERSION No changes"
             echo "TKERNEL_VERSION=$ORIG_VERSION" >> $GITHUB_ENV
           fi
-
+          
+          
+          # 内核版本的数字转换(对比用)
+         echo "KV1=${BRANCH#*-}"       | cut -d. -f1 >> $GITHUB_ENV
+         echo "KV2=${BRANCH#*-}"       | tr -d '.' >> $GITHUB_ENV
+         echo "KV3=${NEW_VERSION}"     | tr -d '.' >> $GITHUB_ENV
       # 自定义内核后缀
       - name: Custom Kernel Suffix if set
         if: ${{ inputs.SUFFIX != '' }}
