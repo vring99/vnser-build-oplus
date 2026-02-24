@@ -683,9 +683,9 @@ jobs:
           cd kernel_workspace/kernel_platform/common
           if [ "$KV1" -lt 6 ]; then
             echo "Patching unicode!"
-            patch -p1 --forward < "${PATCH_DIR}/unicode_bypass_fix_6.1-.patch"
+            patch -p1 --forward < "${PATCH_DIR}/unicode_bypass_fix_6.1-.patch" || true
           else
-            patch -p1 --forward < "${PATCH_DIR}/unicode_bypass_fix_6.1+.patch"
+            patch -p1 --forward < "${PATCH_DIR}/unicode_bypass_fix_6.1+.patch" || true
           fi
 
       - name: Apply LSM_BBG
