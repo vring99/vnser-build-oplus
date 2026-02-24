@@ -677,6 +677,17 @@ jobs:
             exit 12
           fi
 
+      - name: Apply UNICODE_BYPASS and MEMORY_OPT
+        run: |
+          PATCH_DIR="${GITHUB_WORKSPACE}/kernel_workspace/Action-Build/patches"
+          cd kernel_workspace/kernel_platform/common
+          if [ "$KV1" -lt 6 ]; then
+            echo "Patching unicode!"
+            patch -p1 --forward < "${PATCH_DIR}/unicode_bypass_fix_6.1-.patch"
+          else
+            patch -p1 --forward < "${PATCH_DIR}/unicode_bypass_fix_6.1+.patch"
+          fi
+
       - name: Apply LSM_BBG
         if: ${{ inputs.LSM }}
         run: |
