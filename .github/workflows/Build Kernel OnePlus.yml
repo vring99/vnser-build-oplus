@@ -252,10 +252,10 @@ jobs:
 #            sched: true
 #            ipv6: true
 #
-#          - file: oneplus_pad_2_pro_b
-#            kpm: true
-#            sched: true
-#            ipv6: true
+          - file: oneplus_pad_2_pro_b
+            kpm: true
+            sched: true
+            ipv6: true
 #
 #          - file: oneplus_13
 #            kpm: true
