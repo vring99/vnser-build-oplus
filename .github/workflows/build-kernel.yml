@@ -1022,7 +1022,8 @@ jobs:
         if: ${{ inputs.KPM }}
         run: |
           cd kernel_workspace/kernel_platform/out/Final-Image-Find
-          curl -LO --retry 5 --retry-delay 2 --retry-connrefused https://raw.githubusercontent.com/Numbersf/Action-Build/SukiSU-Ultra/patches/patch_linux
+          #curl -LO --retry 5 --retry-delay 2 --retry-connrefused https://raw.githubusercontent.com/Numbersf/Action-Build/SukiSU-Ultra/patches/patch_linux
+          curl -LO --retry 5 --retry-delay 2 --retry-connrefused https://github.com/SukiSU-Ultra/SukiSU_KernelPatch_patch/releases/latest/download/patch_linux
           chmod +x patch_linux
           ./patch_linux
           rm -f Image
