@@ -12,17 +12,57 @@ jobs:
         include:
           #天玑
 
+          #5.10
 
-          #
-          #          #6系
-#          - file: oneplus_ace_3v_v
-#            kpm: true
-#            sched: false
-#            ipv6: true
-          - file: oneplus_ace_3v_b
+
+          - file: oneplus_ace_v
             kpm: true
             sched: false
-            ipv6: true
+            ipv6: false
+          - file: oneplus_ace_v
+            kpm: false
+            sched: false
+            ipv6: false
+
+          - file: oneplus_ace_rate_v
+            kpm: true
+            sched: false
+            ipv6: false
+          - file: oneplus_ace_rate_v
+            kpm: false
+            sched: false
+            ipv6: false
+          - file: oneplus_ace_2_v_v
+            kpm: true
+            sched: false
+            ipv6: false
+          - file: oneplus_ace_2_v_v
+            kpm: false
+            sched: false
+            ipv6: false
+          - file: oneplus_pad
+            kpm: true
+            sched: false
+            ipv6: false
+
+          - file: oneplus_ace5_race_b
+            kpm: true
+            sched: false
+            ipv6: false
+
+          - file: oneplus_ace5_ultra_b
+            kpm: true
+            sched: false
+            ipv6: false
+
+          - file: oneplus_ace5_ultra
+            kpm: true
+            sched: true
+            ipv6: false
+          - file: oneplus_pad2_mt6991_b
+            kpm: true
+            sched: true
+            ipv6: false
 
 #
 #          - file: oneplus_15
