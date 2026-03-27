@@ -667,10 +667,10 @@ jobs:
               fi
               sed -i '/#include <linux\/dma-buf.h>/a #include <linux\/susfs.h>' ./fs/proc/base.c
             fi
-            if [[ "$CURRENT_SUB" -le 58 ]]; then
-              cp $KERNEL_PATCHES/wild/susfs_fix_patches/v${SUSFS_VERSION}/a15-6.6/task_mmu.c.patch ./
-              patch -p1 < task_mmu.c.patch || true
-            fi
+            #if [[ "$CURRENT_SUB" -le 58 ]]; then
+            #  cp $KERNEL_PATCHES/wild/susfs_fix_patches/v${SUSFS_VERSION}/a15-6.6/task_mmu.c.patch ./
+            #  patch -p1 < task_mmu.c.patch || true
+            #fi
           fi
 
       # OGKI转换GKI，无需修改 dtbo 开机
