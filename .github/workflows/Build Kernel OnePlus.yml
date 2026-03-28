@@ -5,7 +5,7 @@ on:
 
 
 jobs:
-  build:
+  vring-resukisu:
     strategy:
       fail-fast: false
       matrix:

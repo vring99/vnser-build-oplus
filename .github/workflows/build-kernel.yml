@@ -70,7 +70,7 @@ on:
         required: false
         default: true
 jobs:
-  build:
+  load:
     name: ${{ inputs.SCHED  && ' [SCHED]' || '' }}${{ inputs.LSM  && ' [LSM]' || '' }}${{ inputs.KPM && ' [KPM]' || '' }}For ${{ inputs.FILE }} ${{ inputs.SUFFIX }}
     runs-on: ubuntu-latest
     env:
