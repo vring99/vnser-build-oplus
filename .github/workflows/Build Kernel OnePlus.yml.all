@@ -10,10 +10,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          #天玑
-
-          #5.10
-
+          #天玑###
 
           - file: oneplus_ace_v
             kpm: true
@@ -91,6 +88,11 @@ jobs:
             sched: true
             ipv6: false
 
+          - file: oneplus_ace5_ultra_b_vring
+            kpm: true
+            sched: true
+            ipv6: false
+
           - file: oneplus_pad2_mt6991_b
             kpm: true
             sched: true
@@ -107,7 +109,7 @@ jobs:
             sched: true
             ipv6: false
 
-          #骁龙
+          #骁龙######
           #5.10
           - file: oneplus_10_pro_v
             kpm: true
