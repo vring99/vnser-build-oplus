@@ -655,7 +655,7 @@ jobs:
             if grep -q 'susfs_is_current_proc_umounted' ./fs/proc/base.c && ! grep -qF '#include <linux/susfs.h>' ./fs/proc/base.c; then
               sed -i '/#include <linux\/dma-buf.h>/a #include <linux\/susfs.h>' ./fs/proc/base.c
             fi
-            if [[ "$CURRENT_SUB" -le 75 ]]; then
+            if [[ "$CURRENT_SUB" -le 128 ]]; then
               sed -i -e 's/goto show_pad;/return 0;/' ./fs/proc/task_mmu.c
             fi
           fi
