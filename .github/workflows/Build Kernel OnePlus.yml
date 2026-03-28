@@ -11,10 +11,10 @@ jobs:
       matrix:
         include:
 
-          - file: oneplus_pad_mt6897_v
+          - file: oneplus_ace_3v_v
             kpm: true
             sched: false
-            ipv6: false
+            ipv6: true
 
 #          - file: oneplus_15
 #            kpm: true
