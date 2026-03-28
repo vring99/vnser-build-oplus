@@ -628,6 +628,21 @@ jobs:
           KERNEL_PATCHES=$GITHUB_WORKSPACE/kernel_patches
           git clone https://github.com/WildKernels/kernel_patches.git "$KERNEL_PATCHES"
           
+          if [[ "$GKI_V" == "android12-5.10" ]]; then
+              if [[ "$CURRENT_SUB" -le 209 ]]; then
+                sed -i -e 's/goto show_pad;/return 0;/' ./fs/proc/task_mmu.c
+              fi
+              if [[ "$CURRENT_SUB" -le 117 ]]; then
+                cp $KERNEL_PATCHES/wild/susfs_fix_patches/v${SUSFS_VERSION}/a12-5.10/fdinfo.c.patch ./
+                patch -p1 < fdinfo.c.patch || true
+              fi
+              if [[ "$CURRENT_SUB" -le 43 ]]; then
+                cp $KERNEL_PATCHES/wild/susfs_fix_patches/v${SUSFS_VERSION}/a12-5.10/base.c.patch ./
+                patch -p1 < base.c.patch || true
+              fi
+          fi
+          
+          
           # Android 14 - 6.1 修复
           if [[ "$GKI_V" == "android14-6.1" ]]; then
             if [[ "$CURRENT_SUB" -le 141 || "$CURRENT_SUB" -ge 145 ]]; then

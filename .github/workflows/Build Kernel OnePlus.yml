@@ -79,7 +79,7 @@ jobs:
 
           - file: oneplus_ace5_ultra_b
             kpm: true
-            sched: false
+            sched: true
             ipv6: false
 
           - file: oneplus_ace5_ultra
@@ -89,7 +89,7 @@ jobs:
 
           - file: oneplus_ace5_ultra_b_vring
             kpm: true
-            sched: true
+            sched: false
             ipv6: false
 
           - file: oneplus_pad2_mt6991_b
@@ -100,12 +100,12 @@ jobs:
 
           - file: oneplus_pad_mt6897_b
             kpm: true
-            sched: true
+            sched: false
             ipv6: false
 
           - file: oneplus_pad_mt6897_v
             kpm: true
-            sched: true
+            sched: false
             ipv6: false
 
 #          - file: oneplus_15
