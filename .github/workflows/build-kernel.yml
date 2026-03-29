@@ -116,7 +116,7 @@ jobs:
           DYNAMIC_REPO_INPUT="vring99"
           declare -A REPOS
           REPOS["OnePlusOSS"]="OnePlusOSS|kernel_manifest"
-          REPOS["Dynamic"]="${DYNAMIC_REPO_INPUT}|kernel_manifest"
+          REPOS["Dynamic"]="${DYNAMIC_REPO_INPUT}|kernel_manifest_oplus"
           REPOS["Appendix"]="Numbersf|Kernel_Manifest_Appendix"
 
           FOUND_REPO=""
