@@ -13,7 +13,7 @@ jobs:
 
           - file: oneplus_ace5_ultra_b
             kpm: true
-            sched: true
+            sched: false
             ipv6: false
 
 #          - file: oneplus_15
