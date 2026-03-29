@@ -734,12 +734,11 @@ jobs:
           done
           git clone https://github.com/Numbersf/SCHED_PATCH.git -b $CPU || { echo "❌ CPU 分支不存在，风驰内核暂未支持你的机型，请关闭后重试"; exit 11; }
           echo "正在拉取风驰补丁"
-          if [ "$FILE" == "oneplus_ace5_ultra_b" ]; then
-            cd SCHED_PATCH
-            git checkout "mt6991"
-            cd ../
-          fi
+   
           cp ./SCHED_PATCH/fengchi_${FILE}.patch ./
+          if [ "$FILE" == "oneplus_ace5_ultra_b_vring" ]; then   
+              FILE="oneplus_ace_6"
+          fi
           if [[ -f "fengchi_${FILE}.patch" ]]; then
             echo "正在打风驰补丁"
             dos2unix "fengchi_${FILE}.patch"
