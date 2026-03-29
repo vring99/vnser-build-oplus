@@ -743,7 +743,7 @@ jobs:
           if [[ -f "fengchi_${FILE}.patch" ]]; then
             echo "正在打风驰补丁"
             dos2unix "fengchi_${FILE}.patch"
-            patch -p1 -F 3 < "fengchi_${FILE}.patch"
+            patch -p1 -F 3 < "fengchi_${FILE}.patch" || true
             echo "fengchi_patch完成"
           else
             echo "❌ 未匹配到补丁，风驰内核暂未支持你的机型，请关闭后重试"
