@@ -113,7 +113,7 @@ jobs:
           echo "FILE_BASE=$FILE_BASE" >> $GITHUB_ENV
 
           # 动态调用源码清单仓库，仓库优先级：1️⃣ OnePlusOSS → 2️⃣ Dynamic → 3️⃣ Appendix
-          DYNAMIC_REPO_INPUT="vnser"
+          DYNAMIC_REPO_INPUT="vring99"
           declare -A REPOS
           REPOS["OnePlusOSS"]="OnePlusOSS|kernel_manifest"
           REPOS["Dynamic"]="${DYNAMIC_REPO_INPUT}|kernel_manifest"
