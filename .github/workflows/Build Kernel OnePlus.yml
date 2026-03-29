@@ -11,9 +11,9 @@ jobs:
       matrix:
         include:
 
-          - file: oneplus_ace5_ultra_b
+          - file: oneplus_ace5_ultra_b_vring
             kpm: true
-            sched: false
+            sched: true
             ipv6: false
 
 #          - file: oneplus_15
