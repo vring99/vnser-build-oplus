@@ -71,7 +71,7 @@ jobs:
             sched: false
             ipv6: false
 
-          - file: oneplus_ace5_race_v
+          - file: oneplus_ace5_race
             kpm: true
             sched: false
             ipv6: false
