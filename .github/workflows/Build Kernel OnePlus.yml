@@ -76,7 +76,7 @@ jobs:
             sched: false
             ipv6: false
 
-          - file: oneplus_ace5_ultra_b
+          - file: oneplus_ace5_ultra_b_vring
             kpm: true
             sched: true
             ipv6: false
