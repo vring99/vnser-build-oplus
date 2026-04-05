@@ -430,7 +430,7 @@ jobs:
 
           - file: oneplus_turbo_6
             kpm: true
-            sched: false
+            sched: true
             ipv6: true
           #- file: oneplus_ace5_ultra_b_vring
           #  kpm: true
