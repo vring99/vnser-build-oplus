@@ -651,19 +651,15 @@ jobs:
               grep -n "susfs_def.h" mm/memory.c || echo "memory.c 缺少 susfs_def.h"
               
               echo "===== 修复 ====="
-              if grep -q "SUSFS_IS_INODE_SUS_MAP" mm/memory.c && ! grep -q "susfs_def.h" mm/memory.c; then
-              sed -i '/#include <linux\/sched\/sysctl.h>/a \
-              #ifdef CONFIG_KSU_SUSFS_SUS_MAP\n#include <linux/susfs_def.h>\n#endif' mm/memory.c
+             if grep -q "SUSFS_IS_INODE_SUS_MAP" mm/memory.c && ! grep -q "susfs_def.h" mm/memory.c; then
+                  sed -i '/#include <linux\/vmalloc.h>/a \
+                  #ifdef CONFIG_KSU_SUSFS_SUS_MAP\n#include <linux/susfs_def.h>\n#endif' mm/memory.c
               fi
               
               echo "===== 验证 ====="
               grep -n "susfs_def.h\|SUSFS_IS_INODE_SUS_MAP" mm/memory.c
               
-              sed -i '/#include <linux\/sched\/sysctl.h>/a \
-              #ifdef CONFIG_KSU_SUSFS_SUS_MAP\n#include <linux/susfs_def.h>\n#endif' mm/memory.c
-              # fs/proc/base.c
-              sed -i '/#include <linux\/dma-buf.h>/a \
-              #if defined(CONFIG_KSU_SUSFS_SUS_MAP) || defined(CONFIG_KSU_SUSFS_OPEN_REDIRECT)\n#include <linux/susfs_def.h>\n#endif' fs/proc/base.c
+            
             #fi
           fi
           
