@@ -641,6 +641,16 @@ jobs:
                 patch -p1 < base.c.patch || true
               fi
           fi
+          if [[ "$GKI_V" == "android13-5.15" ]]; then 
+            #if [[ "$CURRENT_SUB" -gt 167 ]]; then
+              # memory.c
+              sed -i '/#include <linux\/sched\/sysctl.h>/a \
+              #ifdef CONFIG_KSU_SUSFS_SUS_MAP\n#include <linux/susfs_def.h>\n#endif' mm/memory.c
+              # fs/proc/base.c
+              sed -i '/#include <linux\/dma-buf.h>/a \
+              #if defined(CONFIG_KSU_SUSFS_SUS_MAP) || defined(CONFIG_KSU_SUSFS_OPEN_REDIRECT)\n#include <linux/susfs_def.h>\n#endif' fs/proc/base.c
+            #fi
+          fi
           
           
           # Android 14 - 6.1 修复
@@ -682,10 +692,18 @@ jobs:
               fi
               sed -i '/#include <linux\/dma-buf.h>/a #include <linux\/susfs.h>' ./fs/proc/base.c
             fi
-            #if [[ "$CURRENT_SUB" -le 58 ]]; then
-            #  cp $KERNEL_PATCHES/wild/susfs_fix_patches/v${SUSFS_VERSION}/a15-6.6/task_mmu.c.patch ./
-            #  patch -p1 < task_mmu.c.patch || true
-            #fi
+          
+          
+          
+            if [[ "$CURRENT_SUB" -le 58 ]]; then
+              # memory.c
+              sed -i '/#include <linux\/sched\/sysctl.h>/a \
+              #ifdef CONFIG_KSU_SUSFS_SUS_MAP\n#include <linux/susfs_def.h>\n#endif' mm/memory.c
+              # fs/proc/base.c
+              sed -i '/#include <linux\/dma-buf.h>/a \
+              #if defined(CONFIG_KSU_SUSFS_SUS_MAP) || defined(CONFIG_KSU_SUSFS_OPEN_REDIRECT)\n#include <linux/susfs_def.h>\n#endif' fs/proc/base.c
+          
+            fi
           fi
 
       # OGKI转换GKI，无需修改 dtbo 开机
