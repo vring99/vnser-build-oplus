@@ -525,23 +525,23 @@ jobs:
           SUSFS_BRANCH="gki-${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}"
           git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}
           
-          #cd susfs4ksu
-          #if [ "$SUSFS_BRANCH" = "gki-android12-5.10" ]; then
-          #  git checkout f4379db3
+          cd susfs4ksu
+          if [ "$SUSFS_BRANCH" = "gki-android12-5.10" ]; then
+            git checkout e1681bc4
           
-          # elif [ "$SUSFS_BRANCH" = "gki-android13-5.15" ]; then
-          #  git checkout adad5c16
-          #elif [ "$SUSFS_BRANCH" = "gki-android14-6.1" ]; then
-          #  git checkout 7635f615
-          #elif [ "$SUSFS_BRANCH" = "gki-android15-6.6" ]; then
-           # git checkout 6eceea1e
-          #elif [ "$SUSFS_BRANCH" = "gki-android16-6.12" ]; then
-          #  git checkout d41b8f1d
-          #else
-           # echo "No specific commit for this"
-          #  exit 500
-          #fi
-          #cd ../
+           elif [ "$SUSFS_BRANCH" = "gki-android13-5.15" ]; then
+            git checkout 349ed52e
+          elif [ "$SUSFS_BRANCH" = "gki-android14-6.1" ]; then
+            git checkout ef16cbce
+          elif [ "$SUSFS_BRANCH" = "gki-android15-6.6" ]; then
+            git checkout de8d8ca1
+          elif [ "$SUSFS_BRANCH" = "gki-android16-6.12" ]; then
+            git checkout fd03bb9c
+          else
+            echo "No specific commit for this"
+            exit 500
+          fi
+          cd ../
           
           git clone https://github.com/ShirkNeko/SukiSU_patch.git
           git clone https://github.com/Numbersf/Action-Build.git
@@ -760,6 +760,12 @@ jobs:
           else
             patch -p1 --forward < "${PATCH_DIR}/unicode_bypass_fix_6.1+.patch" || true
           fi
+      - name: 应用 SELinux 策略/上下文查询隐藏补丁
+        working-directory: ${{ env.KERNEL_ROOT }}/common
+        run: |
+          echo "正在应用 SELinux 策略/上下文查询隐藏补丁..."
+          wget https://github.com/$GITHUB_REPOSITORY/raw/refs/heads/$GITHUB_REF_NAME/other_patch/70_selinux_hide_policy_query.patch -O 70_selinux_hide_policy_query.patch
+          patch -p1 -N -F 3 < 70_selinux_hide_policy_query.patch || true
 
       - name: Apply LSM_BBG
         if: ${{ inputs.LSM }}
