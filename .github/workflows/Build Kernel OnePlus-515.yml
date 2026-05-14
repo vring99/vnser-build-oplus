@@ -1,4 +1,4 @@
-name:  Build一加RESUKISU@vring-5.15
+name: oplus-resukisu-vring-5.15
 
 on:
   workflow_dispatch:  # This allows this workflow to be called from another workflow
