@@ -11,7 +11,48 @@ jobs:
       matrix:
         include:
 
+
+
+          #          #5.15
+          - file: oneplus_ace3_v
+            kpm: true
+            sched: false
+            ipv6: true
           - file: oneplus_ace3_b
+            kpm: true
+            sched: false
+            ipv6: true
+
+
+          #5.15
+          - file: oneplus_12r_v
+            kpm: true
+            sched: false
+            ipv6: true
+          - file: oneplus_12r_b
+            kpm: true
+            sched: false
+            ipv6: true
+
+
+
+          #5.15
+          - file: oneplus_11_v
+            kpm: true
+            sched: false
+            ipv6: true
+          - file: oneplus_11_b
+            kpm: true
+            sched: false
+            ipv6: true
+
+          #5.15
+          - file: oneplus_ace2_pro_v
+            kpm: true
+            sched: false
+            ipv6: true
+
+          - file: oneplus_ace2_pro_b
             kpm: true
             sched: false
             ipv6: true
