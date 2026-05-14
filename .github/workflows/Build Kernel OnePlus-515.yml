@@ -1,0 +1,33 @@
+name:  Build一加RESUKISU@vring
+
+on:
+  workflow_dispatch:  # This allows this workflow to be called from another workflow
+
+
+jobs:
+  vring-resukisu:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+
+          - file: oneplus_ace3_b
+            kpm: true
+            sched: false
+            ipv6: true
+
+
+    uses: ./.github/workflows/build-kernel.yml
+    secrets: inherit
+    with:
+      FILE: ${{ matrix.file }}
+      HOOK: "manual"
+      SUSFS_CI: "CI"
+      KSU_META: "susfs-main/vring/"
+      BUILD_TIME:  "Mon Aug 18 09:30:24 UTC 2024"
+      SCHED: ${{ matrix.sched }}
+      ZRAM: false
+      LSM: true
+      FAST_BUILD: true
+      KPM: ${{ matrix.kpm }}
+      IPV6: ${{ matrix.ipv6 }}
