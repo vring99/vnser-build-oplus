@@ -644,7 +644,7 @@ jobs:
           if [[ "$GKI_V" == "android13-5.15" ]]; then 
             #if [[ "$CURRENT_SUB" -gt 167 ]]; then
               # memory.c
-              cd source
+    
               echo "===== 检查 ====="
               grep -n "SUSFS_IS_INODE_SUS_MAP" mm/memory.c
               grep -R "define SUSFS_IS_INODE_SUS_MAP" -n include fs mm kernel 2>/dev/null
