@@ -237,7 +237,27 @@ jobs:
             sched: true
             ipv6: true
 
+          - file: oneplus_ace_6t_Canary
+            kpm: true
+            sched: false
+            ipv6: true
+          - file: oneplus_15_Canary
+            kpm: true
+            sched: false
+            ipv6: true
+          - file: oneplus_15t_Canary
+            kpm: true
+            sched: false
+            ipv6: true
+          - file: oneplus_pad_4_Canary
+            kpm: true
+            sched: false
+            ipv6: true
 
+          - file: oneplus_pad_3_pro_Canary
+            kpm: true
+            sched: false
+            ipv6: true
 
 
     uses: ./.github/workflows/build-kernel.yml

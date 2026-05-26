@@ -75,6 +75,13 @@ jobs:
             sched: false
             ipv6: false
 
+          - file: oneplus_ace6_ultra_vring
+            kpm: true
+            sched: false
+            ipv6: false
+
+
+
     uses: ./.github/workflows/build-kernel.yml
     secrets: inherit
     with:
