@@ -1,11 +1,11 @@
-name:  oplus-resukisu-vring-all
+name:  oplus-resukisu-vring-mtk
 
 on:
   workflow_dispatch:  # This allows this workflow to be called from another workflow
 
 
 jobs:
-  vring-resukisu:
+  vring-resukisu-mtk:
     strategy:
       fail-fast: false
       matrix:

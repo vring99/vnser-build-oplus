@@ -1,11 +1,11 @@
-name:  oplus-resukisu-vring-all
+name:  oplus-resukisu-vring-snapdragon
 
 on:
   workflow_dispatch:  # This allows this workflow to be called from another workflow
 
 
 jobs:
-  vring-resukisu:
+  vring-resukisu-snapdragon:
     strategy:
       fail-fast: false
       matrix:
