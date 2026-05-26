@@ -80,7 +80,7 @@ jobs:
       CCACHE_MAXSIZE: 8G
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Maximize Build Space
         uses: easimon/maximize-build-space@master
@@ -129,7 +129,7 @@ jobs:
             local API_URL="https://api.github.com/repos/${OWNER}/${REPO_NAME}"
 
             echo "🌐 尝试拉取 ${OWNER}/${REPO_NAME} 分支列表..."
-            BRANCHES=$(curl -fsL "$API_URL/branches" | jq -r 'if type=="array" then .[].name else empty end' 2>/dev/null || true)
+            BRANCHES=$(git ls-remote --heads https://github.com/${OWNER}/${REPO_NAME}.git | sed 's|.*refs/heads/||')
 
             if [[ -z "$BRANCHES" ]]; then
               echo "⚠️ ${OWNER}/${REPO_NAME} 分支列表获取失败，请尝试重新运行工作流。"
@@ -254,12 +254,12 @@ jobs:
       - name: Install Dependencies + APTC
         uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: python3 git curl ccache libelf-dev build-essential flex bison libssl-dev libncurses-dev liblz4-tool zlib1g-dev libxml2-utils rsync unzip gawk dos2unix  kmod libdw-dev elfutils
+          packages: python3 git curl ccache libelf-dev build-essential flex bison libssl-dev libncurses-dev liblz4-tool zlib1g-dev libxml2-utils rsync unzip gawk dos2unix kmod libdw-dev elfutils
           execute_install_scripts: true
 
 
       - name: Set APT Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ env.HOME }}/apt-cache
           key: ${{ runner.os }}-apt-${{ hashFiles('.github/workflows/build-kernel.yml') }}
@@ -644,22 +644,22 @@ jobs:
           if [[ "$GKI_V" == "android13-5.15" ]]; then 
             #if [[ "$CURRENT_SUB" -gt 167 ]]; then
               # memory.c
-    
+          
               echo "===== 检查 ====="
               grep -n "SUSFS_IS_INODE_SUS_MAP" mm/memory.c
               grep -R "define SUSFS_IS_INODE_SUS_MAP" -n include fs mm kernel 2>/dev/null
               grep -n "susfs_def.h" mm/memory.c || echo "memory.c 缺少 susfs_def.h"
-              
+          
               echo "===== 修复 ====="
              if grep -q "SUSFS_IS_INODE_SUS_MAP" mm/memory.c && ! grep -q "susfs_def.h" mm/memory.c; then
                   sed -i '/#include <linux\/vmalloc.h>/a \
                   #ifdef CONFIG_KSU_SUSFS_SUS_MAP\n#include <linux/susfs_def.h>\n#endif' mm/memory.c
               fi
-              
+          
               echo "===== 验证 ====="
               grep -n "susfs_def.h\|SUSFS_IS_INODE_SUS_MAP" mm/memory.c
-              
-            
+          
+          
             #fi
           fi
           
@@ -733,8 +733,8 @@ jobs:
           echo "正在打OGKI转换GKI补丁"
           patch -p1 -F 3 < "${PATCH_DIR}/hmbird_patch.patch" || true
           echo "OGKI转换GKI_patch完成"
-      
-      
+
+
 
       - name: Apply ZRAM
         if: ${{ inputs.ZRAM }}
@@ -763,8 +763,8 @@ jobs:
           done
           git clone https://github.com/Numbersf/SCHED_PATCH.git -b $CPU || { echo "❌ CPU 分支不存在，风驰内核暂未支持你的机型，请关闭后重试"; exit 11; }
           echo "正在拉取风驰补丁"
-   
-        
+          
+          
           if [ "$FILE" == "oneplus_ace5_ultra_b_vring" ]; then   
               FILE="oneplus_ace_6"
           fi
@@ -869,7 +869,9 @@ jobs:
           IPV6="${{ inputs.IPV6 }}"
           # IPSET & IPv6_NAT配置*
           if [[ "${CPU}" == sm*  && "${IPV6}" = "true" ]]; then
-            echo "CONFIG_BPF_STREAM_PARSER=y" >> "$CONFIG_FILE"
+                   if [[ "$KERNEL_VERSION" != "6.12" ]]; then
+              echo "CONFIG_BPF_STREAM_PARSER=y" >> "$CONFIG_FILE"
+            fi
             echo "CONFIG_NETFILTER_XT_MATCH_ADDRTYPE=y" >> "$CONFIG_FILE"
             echo "CONFIG_NETFILTER_XT_SET=y" >> "$CONFIG_FILE"
             echo "CONFIG_IP_SET=y" >> "$CONFIG_FILE"
@@ -1012,12 +1014,13 @@ jobs:
           
           
           cd ./common
-      
+          
           curl -L "https://raw.githubusercontent.com/cctv18/android_gki_kernel_common/refs/heads/android16-6.12-2025-06/_setup_env.sh" -o ./_setup_env.sh || true
-      
+          
           #source "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/build/kernel/_setup_env.sh" 2>/dev/null || true
+          
           source "./_setup_env.sh" 2>/dev/null || true
-  
+          
           
           export PATH="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$CLANG_PREBUILT_BIN:$PATH"
           export PATH="/usr/lib/ccache:$PATH"
@@ -1029,10 +1032,16 @@ jobs:
           
           
           # 重映射物理路径
-          MAP="-fdebug-prefix-map=${GITHUB_WORKSPACE}=."
-          MPMAP="-fmacro-prefix-map=${GITHUB_WORKSPACE}=."
-          FPMAP="-ffile-prefix-map=${GITHUB_WORKSPACE}=."
-          
+          COMMON_REAL_PATH=$(pwd -P)
+          PLATFORM_REAL_PATH=$(dirname "$COMMON_REAL_PATH")
+          ROOT_REAL_PATH=$(dirname "$PLATFORM_REAL_PATH")
+          MAP="-fdebug-prefix-map=$ROOT_REAL_PATH=."
+          MPMAP="-fmacro-prefix-map=$ROOT_REAL_PATH=."
+          FPMAP="-ffile-prefix-map=$ROOT_REAL_PATH=."
+
+          # KCFLAGS
+          KCFLAGS="$MAP $MPMAP $FPMAP -no-canonical-prefixes -Wno-error -D__ANDROID_COMMON_KERNEL__"
+
           MAKE_ARGS=(
             LLVM=1
             ARCH=arm64
@@ -1042,9 +1051,7 @@ jobs:
             LD=ld.lld
             HOSTLD=ld.lld
             PAHOLE=../../prebuilts/kernel-build-tools/linux-x86/bin/pahole
-            KCFLAGS+="$MAP $MPMAP $FPMAP"
-            KCFLAGS+=-Wno-error
-            KCFLAGS+=-D__ANDROID_COMMON_KERNEL__
+            KCFLAGS="$KCFLAGS"
           )
           
           if [[ "$USE_LLVM_IAS" == "true" ]]; then
@@ -1127,8 +1134,8 @@ jobs:
               fi
             done
           fi
-      
-      
+
+
 
       - name: Apply patch_linux and replace Image
         if: ${{ inputs.KPM }}
@@ -1141,8 +1148,8 @@ jobs:
           rm -f Image
           mv oImage Image
           cp Image $GITHUB_WORKSPACE/AnyKernel3/Image
-      
-      
+
+
 
       - name: Set zip Suffix
         id: suffix
@@ -1213,7 +1220,7 @@ jobs:
             echo "upload=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-      
+
 
       - name: Post-build Disk Check
         run: df -h
