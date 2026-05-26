@@ -624,7 +624,7 @@ jobs:
             CURRENT_SUB=99999
           fi
           echo "应用 SUSFS 补丁..."
-          SUSFS_VERSION="2.0.0"
+          SUSFS_VERSION="2.10"
           KERNEL_PATCHES=$GITHUB_WORKSPACE/kernel_patches
           git clone https://github.com/WildKernels/kernel_patches.git "$KERNEL_PATCHES"
           
@@ -633,11 +633,11 @@ jobs:
                 sed -i -e 's/goto show_pad;/return 0;/' ./fs/proc/task_mmu.c
               fi
               if [[ "$CURRENT_SUB" -le 117 ]]; then
-                cp $KERNEL_PATCHES/wild/susfs_fix_patches/v${SUSFS_VERSION}/a12-5.10/fdinfo.c.patch ./
+                cp $KERNEL_PATCHES/wild/archived/susfs_fix_patches/v${SUSFS_VERSION}/a12-5.10/fdinfo.c.patch ./
                 patch -p1 < fdinfo.c.patch || true
               fi
               if [[ "$CURRENT_SUB" -le 43 ]]; then
-                cp $KERNEL_PATCHES/wild/susfs_fix_patches/v${SUSFS_VERSION}/a12-5.10/base.c.patch ./
+                cp $KERNEL_PATCHES/wild/archived/susfs_fix_patches/v${SUSFS_VERSION}/a12-5.10/base.c.patch ./
                 patch -p1 < base.c.patch || true
               fi
           fi
@@ -667,7 +667,7 @@ jobs:
           # Android 14 - 6.1 修复
           if [[ "$GKI_V" == "android14-6.1" ]]; then
             if [[ "$CURRENT_SUB" -le 141 || "$CURRENT_SUB" -ge 145 ]]; then
-              cp $KERNEL_PATCHES/wild/susfs_fix_patches/v${SUSFS_VERSION}/a14-6.1/base.c.patch ./
+              cp $KERNEL_PATCHES/wild/archived/susfs_fix_patches/v${SUSFS_VERSION}/a14-6.1/base.c.patch ./
               patch -p1 < base.c.patch || true
             fi
             if ! grep -qF '#include <linux/dma-buf.h>' ./fs/proc/base.c; then
@@ -684,7 +684,7 @@ jobs:
           # Android 15 - 6.6 修复
           if [[ "$GKI_V" == "android15-6.6" ]]; then
             if [[ "$CURRENT_SUB" -ge 98 ]]; then
-              cp $KERNEL_PATCHES/wild/susfs_fix_patches/v${SUSFS_VERSION}/a15-6.6/base.c.patch ./
+              cp $KERNEL_PATCHES/wild/archived/susfs_fix_patches/v${SUSFS_VERSION}/a15-6.6/base.c.patch ./
               patch -p1 < base.c.patch || true
             fi
             # 修复 6.6.50~6.6.97: 缺少 susfs_def.h 导致编译报 undeclared identifier
