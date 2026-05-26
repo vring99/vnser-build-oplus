@@ -1,0 +1,90 @@
+name: oplus-resukisu-vring-6.12-make
+
+on:
+  workflow_dispatch:
+
+jobs:
+  vring-resukisu-6-12-make:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - file: oneplus_pad_2_pro
+            kpm: true
+            sched: true
+            ipv6: true
+          - file: oneplus_pad_2_pro_b
+            kpm: true
+            sched: true
+            ipv6: true
+          - file: oneplus_13
+            kpm: true
+            sched: true
+            ipv6: true
+          - file: oneplus_13_b
+            kpm: true
+            sched: true
+            ipv6: true
+          - file: oneplus_13t
+            kpm: true
+            sched: true
+            ipv6: true
+          - file: oneplus_13t_b
+            kpm: true
+            sched: true
+            ipv6: true
+          - file: oneplus_pad_3
+            kpm: true
+            sched: true
+            ipv6: true
+          - file: oneplus_pad_3_b
+            kpm: true
+            sched: true
+            ipv6: true
+          - file: oneplus_ace_6
+            kpm: true
+            sched: true
+            ipv6: true
+          - file: oneplus_turbo_6v
+            kpm: true
+            sched: false
+            ipv6: true
+          - file: oneplus_turbo_6
+            kpm: true
+            sched: true
+            ipv6: true
+          - file: oneplus_ace_6t_Canary
+            kpm: true
+            sched: false
+            ipv6: true
+          - file: oneplus_15_Canary
+            kpm: true
+            sched: false
+            ipv6: true
+          - file: oneplus_15t_Canary
+            kpm: true
+            sched: false
+            ipv6: true
+          - file: oneplus_pad_4_Canary
+            kpm: true
+            sched: false
+            ipv6: true
+          - file: oneplus_pad_3_pro_Canary
+            kpm: true
+            sched: false
+            ipv6: true
+
+    uses: ./.github/workflows/build-kernel-6.12-make.yml
+    secrets: inherit
+    with:
+      FILE: ${{ matrix.file }}
+      HOOK: "manual"
+      SUSFS_CI: "CI"
+      KSU_META: "susfs-main/vring/"
+      BUILD_TIME: "Mon Aug 18 09:30:24 UTC 2024"
+      SCHED: ${{ matrix.sched }}
+      ZRAM: false
+      LSM: true
+      FAST_BUILD: true
+      KPM: ${{ matrix.kpm }}
+      IPV6: ${{ matrix.ipv6 }}
