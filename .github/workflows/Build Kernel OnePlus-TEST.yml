@@ -11,10 +11,14 @@ jobs:
       matrix:
         include:
 
-          - file: oneplus_15
+          - file: oneplus_ace_2v_v
             kpm: true
-            sched: true
-            ipv6: true
+            sched: false
+            ipv6: false
+          - file: oneplus_ace_2v_b
+            kpm: true
+            sched: false
+            ipv6: false
 
     uses: ./.github/workflows/build-kernel.yml
     secrets: inherit
