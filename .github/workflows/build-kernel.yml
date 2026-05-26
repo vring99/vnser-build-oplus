@@ -1010,10 +1010,15 @@ jobs:
           echo "✅ USE_LLVM_IAS=$USE_LLVM_IAS"
           echo "-----------------------"
           
-          set +u
+          
+          cd ./common
+      
           curl -L "https://raw.githubusercontent.com/cctv18/android_gki_kernel_common/refs/heads/android16-6.12-2025-06/_setup_env.sh" -o ./_setup_env.sh || true
-          source "_setup_env.sh" 2>/dev/null || true
-          set -u
+      
+          #source "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/build/kernel/_setup_env.sh" 2>/dev/null || true
+   
+          source "./_setup_env.sh" 2>/dev/null || true
+  
           
           export PATH="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$CLANG_PREBUILT_BIN:$PATH"
           export PATH="/usr/lib/ccache:$PATH"
@@ -1023,7 +1028,6 @@ jobs:
             export LIBCLANG_PATH="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$(dirname "$CLANG_PREBUILT_BIN")/lib"
           fi
           
-          cd ./common
           
           # 重映射物理路径
           MAP="-fdebug-prefix-map=${GITHUB_WORKSPACE}=."
