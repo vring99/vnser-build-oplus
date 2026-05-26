@@ -9,50 +9,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - file: oneplus_pad_2_pro
-            kpm: true
-            sched: true
-            ipv6: true
-          - file: oneplus_pad_2_pro_b
-            kpm: true
-            sched: true
-            ipv6: true
-          - file: oneplus_13
-            kpm: true
-            sched: true
-            ipv6: true
-          - file: oneplus_13_b
-            kpm: true
-            sched: true
-            ipv6: true
-          - file: oneplus_13t
-            kpm: true
-            sched: true
-            ipv6: true
-          - file: oneplus_13t_b
-            kpm: true
-            sched: true
-            ipv6: true
-          - file: oneplus_pad_3
-            kpm: true
-            sched: true
-            ipv6: true
-          - file: oneplus_pad_3_b
-            kpm: true
-            sched: true
-            ipv6: true
-          - file: oneplus_ace_6
-            kpm: true
-            sched: true
-            ipv6: true
-          - file: oneplus_turbo_6v
+
+          - file: oneplus_ace6_ultra_vring
             kpm: true
             sched: false
-            ipv6: true
-          - file: oneplus_turbo_6
-            kpm: true
-            sched: true
-            ipv6: true
+            ipv6: false
           - file: oneplus_ace_6t_Canary
             kpm: true
             sched: false
