@@ -24,10 +24,10 @@ jobs:
             kpm: true
             sched: false
             ipv6: true
-          - file: oneplus_11r_v
-            kpm: true
-            sched: false
-            ipv6: true
+          #- file: oneplus_11r_v
+          #  kpm: true
+          #  sched: false
+          #  ipv6: true
           - file: oneplus_ace2_v
             kpm: true
             sched: false
@@ -51,14 +51,14 @@ jobs:
             kpm: true
             sched: false
             ipv6: true
-          - file: oneplus_12r_v
-            kpm: true
-            sched: false
-            ipv6: true
-          - file: oneplus_12r_b
-            kpm: true
-            sched: false
-            ipv6: true
+          #- file: oneplus_12r_v
+          #  kpm: true
+          #  sched: false
+          #  ipv6: true
+          #- file: oneplus_12r_b
+          #  kpm: true
+          #  sched: false
+          #  ipv6: true
           - file: oneplus_ace2_pro_v
             kpm: true
             sched: false
@@ -98,14 +98,14 @@ jobs:
             sched: false
             ipv6: true
 
-          - file: oneplus_13r
-            kpm: true
-            sched: false
-            ipv6: true
-          - file: oneplus_13r_b
-            kpm: true
-            sched: false
-            ipv6: true
+          #- file: oneplus_13r
+          #  kpm: true
+          #  sched: false
+          #  ipv6: true
+          #- file: oneplus_13r_b
+          #  kpm: true
+          #  sched: false
+          #  ipv6: true
 
           - file: oneplus_ace3_pro_v
             kpm: true
@@ -202,15 +202,15 @@ jobs:
             ipv6: true
 
 
-          - file: oneplus_13s
-            kpm: true
-            sched: true
-            ipv6: true
+          #- file: oneplus_13s
+          #  kpm: true
+          #  sched: true
+          #  ipv6: true
 
-          - file: oneplus_13s_b
-            kpm: true
-            sched: true
-            ipv6: true
+          #- file: oneplus_13s_b
+          #  kpm: true
+          #  sched: true
+          #  ipv6: true
 
           - file: oneplus_pad_3
             kpm: true
