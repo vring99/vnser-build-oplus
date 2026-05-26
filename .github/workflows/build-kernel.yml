@@ -1015,9 +1015,9 @@ jobs:
           
           cd ./common
           
-          #curl -L "https://raw.githubusercontent.com/cctv18/android_gki_kernel_common/refs/heads/android16-6.12-2025-06/_setup_env.sh" -o ./_setup_env.sh || true
-          # source "./_setup_env.sh" 2>/dev/null || true
-          source "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/build/kernel/_setup_env.sh" 2>/dev/null || true
+          curl -L "https://raw.githubusercontent.com/cctv18/android_gki_kernel_common/refs/heads/android16-6.12-2025-06/_setup_env.sh" -o ./_setup_env.sh || true
+          source "./_setup_env.sh" 2>/dev/null || true
+          #source "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/build/kernel/_setup_env.sh" 2>/dev/null || true
           
          
           
@@ -1071,10 +1071,10 @@ jobs:
           
           if [[ "$KERNEL_VERSION" == "6.12" ]]; then
             echo ">> 设置 LTO = none"
-            scripts/config --file out/.config -e LTO_CLANG
-            scripts/config --file out/.config -e LTO_CLANG_NONE
-            scripts/config --file out/.config -d LTO_CLANG_THIN
-            scripts/config --file out/.config -d LTO_CLANG_FULL
+            #scripts/config --file out/.config -e LTO_CLANG
+            #scripts/config --file out/.config -e LTO_CLANG_NONE
+            #scripts/config --file out/.config -d LTO_CLANG_THIN
+            #scripts/config --file out/.config -d LTO_CLANG_FULL
           fi
           make O=out "${MAKE_ARGS[@]}" olddefconfig
           make -j"$(nproc --all)" O=out "${MAKE_ARGS[@]}"
