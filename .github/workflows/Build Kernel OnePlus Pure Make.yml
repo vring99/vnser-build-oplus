@@ -1,4 +1,4 @@
-name: oplus-resukisu-vring-6.12-make
+name: oplus-resukisu-vring-pure-make
 
 on:
   workflow_dispatch:
@@ -9,7 +9,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-
           - file: oneplus_ace6_ultra_vring
             kpm: true
             sched: false
@@ -35,7 +34,7 @@ jobs:
             sched: false
             ipv6: true
 
-    uses: ./.github/workflows/build-kernel-6.12-make.yml
+    uses: ./.github/workflows/build-kernel-pure-make.yml
     secrets: inherit
     with:
       FILE: ${{ matrix.file }}

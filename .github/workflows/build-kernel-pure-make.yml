@@ -1,4 +1,4 @@
-name: build-kernel-6.12-make
+name: build-kernel-pure-make
 permissions:
   contents: write  # Allow writing to repository contents (for pushing tags)
   actions: write   # Allows triggering actions
@@ -221,7 +221,7 @@ jobs:
           echo "Selected SUSFS_CI: ${{ inputs.SUSFS_CI }}"
           echo "Selected HOOK: ${{ inputs.HOOK }}"
           echo "Selected LSM: ${{ inputs.LSM }}"
-          echo "Selected BUILD_MODE: 6.12 aligned make"
+          echo "Selected BUILD_MODE: pure make"
           echo "Selected SCHED: ${{ inputs.SCHED }}"
           echo "Selected ZRAM: ${{ inputs.ZRAM }}"
           echo "Selected KPM: ${{ inputs.KPM }}"
@@ -262,7 +262,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ${{ env.HOME }}/apt-cache
-          key: ${{ runner.os }}-apt-${{ hashFiles('.github/workflows/build-kernel-6.12-make.yml') }}
+          key: ${{ runner.os }}-apt-${{ hashFiles('.github/workflows/build-kernel-pure-make.yml') }}
           restore-keys: |
             ${{ runner.os }}-apt-
 
@@ -338,6 +338,19 @@ jobs:
             fi
             rm -f "$dir/android/abi_gki_protected_exports_"* 2>/dev/null || echo "No protected exports in $dir"
           done
+
+      - name: Prepare Pure Make Toolchain
+        run: |
+          cd kernel_workspace
+          rm -rf clang19 rust build-tools clang.zip rust.zip build-tools.zip
+          mkdir -p clang19 rust
+          curl -L https://github.com/cctv18/oneplus_sm8650_toolchain/releases/download/LLVM-Clang19-r536225/clang-r536225.zip -o clang.zip
+          unzip -q clang.zip -d clang19
+          curl -L https://github.com/cctv18/oneplus_sm8650_toolchain/releases/download/LLVM-Clang19-r536225/rust.zip -o rust.zip
+          unzip -q rust.zip -d rust
+          curl -L https://github.com/cctv18/oneplus_sm8650_toolchain/releases/download/LLVM-Clang19-r536225/build-tools.zip -o build-tools.zip
+          unzip -q build-tools.zip
+          rm -f clang.zip rust.zip build-tools.zip
 
       - name: Kernel Version Handling
         run: |
@@ -953,49 +966,20 @@ jobs:
           echo "Disabling GPUEB for MTK kernel 5.10"
           sed -i '/obj-y.*gpueb/d' kernel_workspace/kernel-5.10/drivers/gpu/mediatek/Makefile
 
-      - name: Build Kernel 6.12 Make Aligned
+      - name: Build Kernel Pure Make
         id: fast_build
         run: |
           KERNEL_VERSION="${{ env.KERNEL_VERSION }}"
           if [[ "$KERNEL_VERSION" != "6.12" ]]; then
-            echo "::error::build-kernel-6.12-make.yml ??? 6.12??? KERNEL_VERSION=$KERNEL_VERSION"
+            echo "::error::build-kernel-pure-make.yml only supports pure make flow, KERNEL_VERSION=$KERNEL_VERSION"
             exit 1
           fi
 
-          cd kernel_workspace/kernel_platform
-
-          CLANG_PREBUILT_BIN=""
-          for f in ./common/build.config.common ./"$KERNEL_REPOS"/build.config.common; do
-            [[ -f "$f" ]] || continue
-            CLANG_PREBUILT_BIN=$(grep '^CLANG_PREBUILT_BIN=' "$f" | cut -d'=' -f2)
-            [[ -n "$CLANG_PREBUILT_BIN" ]] && break
-          done
-          if [[ -z "$CLANG_PREBUILT_BIN" ]]; then
-            echo "::error::CLANG_PREBUILT_BIN ?? build.config.common ???"
-            echo "fallback=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          if [[ "$CLANG_PREBUILT_BIN" =~ (clang-r[0-9a-z]+) ]]; then
-            CLANG_VERSION="${BASH_REMATCH[1]}"
-          elif [[ -f ./common/build.config.constants ]]; then
-            CLANG_VERSION=$(grep '^CLANG_VERSION=' ./common/build.config.constants | cut -d'=' -f2 || true)
-          fi
-          if [[ -z "$CLANG_VERSION" ]]; then
-            echo "::error::??? CLANG_PREBUILT_BIN ? build.config.constants ?? Clang ??"
-            echo "fallback=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          CLANG_PREBUILT_BIN=${CLANG_PREBUILT_BIN/\${CLANG_VERSION}/$CLANG_VERSION}
-          echo "CLANG_PREBUILT_BIN=$CLANG_PREBUILT_BIN"
-          echo "CLANG_VERSION=$CLANG_VERSION"
-
-          cd ./common
+          cd kernel_workspace/kernel_platform/common
           curl -L "https://raw.githubusercontent.com/cctv18/android_gki_kernel_common/refs/heads/android16-6.12-2025-06/_setup_env.sh" -o ./_setup_env.sh || true
           source "./_setup_env.sh" 2>/dev/null || true
 
-          export PATH="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$CLANG_PREBUILT_BIN:$PATH"
+          export PATH="$GITHUB_WORKSPACE/kernel_workspace/clang19/bin:$GITHUB_WORKSPACE/kernel_workspace/build-tools/bin:$GITHUB_WORKSPACE/kernel_workspace/rust/bin:$PATH"
           export PATH="/usr/lib/ccache:$PATH"
           export LLVM=1 LLVM_IAS=1
           export ARCH=arm64 SUBARCH=arm64
@@ -1012,17 +996,15 @@ jobs:
           export OBJDUMP="llvm-objdump"
           export OBJSIZE="llvm-size"
           export STRIP="llvm-strip"
-          export PAHOLE="../../prebuilts/kernel-build-tools/linux-x86/bin/pahole"
+          export PAHOLE="$GITHUB_WORKSPACE/kernel_workspace/build-tools/bin/pahole"
           export CCACHE_BASEDIR="$GITHUB_WORKSPACE"
           export CCACHE_NOHASHDIR="true"
           export CCACHE_NOHARDLINK="true"
           export CCACHE_COMPILERCHECK="none"
 
-          if [[ "$ENABLE_RUST" == "true" ]]; then
-            export RUSTC="../../prebuilts/rust/linux-x86/$RUSTC_VERSION/bin/rustc"
-            export BINDGEN="bindgen"
-            export LIBCLANG_PATH="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$(dirname "$CLANG_PREBUILT_BIN")/lib"
-          fi
+          export RUSTC="rustc"
+          export BINDGEN="bindgen"
+          export LIBCLANG_PATH="$GITHUB_WORKSPACE/kernel_workspace/clang19/lib"
 
           COMMON_REAL_PATH=$(pwd -P)
           PLATFORM_REAL_PATH=$(dirname "$COMMON_REAL_PATH")
@@ -1040,15 +1022,27 @@ jobs:
           KCFLAGS+=" -D__ANDROID_COMMON_KERNEL__"
           export KCFLAGS
 
-          make -j"$(nproc --all)" LLVM=1 LLVM_IAS=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="clang" LD="ld.lld" OBJCOPY="llvm-objcopy" O=out gki_defconfig
-          make -j"$(nproc --all)" LLVM=1 LLVM_IAS=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" LD="ld.lld" OBJCOPY="llvm-objcopy" O=out Image
+          make -j"$(nproc --all)" LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="clang" HOSTCC="clang" LD="ld.lld" HOSTLD="ld.lld" OBJCOPY="llvm-objcopy" O=out gki_defconfig
+          if [[ "$KERNEL_VERSION" == "5.10" || "$KERNEL_VERSION" == "5.15" ]]; then
+            echo ">> 设置 LTO = thin"
+            scripts/config --file out/.config -e LTO_CLANG
+            scripts/config --file out/.config -e LTO_CLANG_THIN
+            scripts/config --file out/.config -d LTO_CLANG_NONE
+            scripts/config --file out/.config -d LTO_CLANG_FULL
+          fi
+
+          if [[ "$KERNEL_VERSION" == "6.12" ]]; then
+            echo ">> 设置 LTO = none"
+          fi
+          make -j"$(nproc --all)" LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" HOSTCC="ccache clang" LD="ld.lld" HOSTLD="ld.lld" OBJCOPY="llvm-objcopy" O=out olddefconfig
+          make -j"$(nproc --all)" LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" HOSTCC="ccache clang" LD="ld.lld" HOSTLD="ld.lld" OBJCOPY="llvm-objcopy" O=out Image
           strings out/arch/arm64/boot/Image | grep 'Linux version'
           ccache -s
 
-      - name: Stop on 6.12 make aligned fallback
+      - name: Stop on pure make fallback
         if: ${{ steps.fast_build.outputs.fallback }}
         run: |
-          echo "::error::6.12 ?? make ?????? Bazel/????"
+          echo "::error::pure make flow does not fallback to Bazel/official script"
           exit 1
 
       - name: Make AnyKernel3
