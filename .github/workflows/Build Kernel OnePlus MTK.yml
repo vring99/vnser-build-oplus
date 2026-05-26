@@ -1,4 +1,4 @@
-name:  oplus-resukisu-vring-mtk
+name:  oplus-resukisu-vring-all
 
 on:
   workflow_dispatch:  # This allows this workflow to be called from another workflow
@@ -28,7 +28,6 @@ jobs:
             ipv6: false
 
 
-          #acerate
           - file: oneplus_ace_race_v
             kpm: true
             sched: false
@@ -47,7 +46,6 @@ jobs:
             sched: false
             ipv6: false
 
-          #ace22v
           - file: oneplus_ace_2v_v
             kpm: true
             sched: false
@@ -86,16 +84,11 @@ jobs:
             sched: true
             ipv6: false
 
-          #- file: oneplus_ace5_ultra_b_vring
-          ##  kpm: true
-          # sched: true
-          #  ipv6: false
 
           - file: oneplus_pad2_mt6991_b
             kpm: true
             sched: true
             ipv6: false
-          #新增2026.03.28
 
           - file: oneplus_pad_mt6897_b
             kpm: true

@@ -1,4 +1,4 @@
-name:  oplus-resukisu-vring-snapdragon
+name:  oplus-resukisu-vring-all
 
 on:
   workflow_dispatch:  # This allows this workflow to be called from another workflow
@@ -10,8 +10,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          #骁龙######
-          #5.10
           - file: oneplus_10_pro_v
             kpm: true
             sched: false
@@ -22,17 +20,14 @@ jobs:
             sched: false
             ipv6: true
 
-          #5.10
           - file: oneplus_10t_v
             kpm: true
             sched: false
             ipv6: true
-          #5.10
           - file: oneplus_11r_v
             kpm: true
             sched: false
             ipv6: true
-          #5.10
           - file: oneplus_ace2_v
             kpm: true
             sched: false
@@ -43,12 +38,10 @@ jobs:
             sched: false
             ipv6: true
 
-          #5.10
           - file: oneplus_ace_pro_v
             kpm: true
             sched: false
             ipv6: true
-          #5.15
           - file: oneplus_11_v
             kpm: true
             sched: false
@@ -58,7 +51,6 @@ jobs:
             kpm: true
             sched: false
             ipv6: true
-          #5.15
           - file: oneplus_12r_v
             kpm: true
             sched: false
@@ -67,7 +59,6 @@ jobs:
             kpm: true
             sched: false
             ipv6: true
-          #5.15
           - file: oneplus_ace2_pro_v
             kpm: true
             sched: false
@@ -78,7 +69,6 @@ jobs:
             sched: false
             ipv6: true
 
-          #          #5.15
           - file: oneplus_ace3_v
             kpm: true
             sched: false
@@ -87,7 +77,6 @@ jobs:
             kpm: true
             sched: false
             ipv6: true
-          #关kpm
           - file: oneplus_10_pro_v
             kpm: false
             sched: false
@@ -96,22 +85,15 @@ jobs:
             kpm: false
             sched: false
             ipv6: true
-          #5.10
           - file: oneplus_10t_v
             kpm: false
             sched: false
             ipv6: true
 
-          #- file: oneplus_ace2_v
-          # kpm: false
-          #  sched: false
-          #  ipv6: true
-          #          #5.10
           - file: oneplus_11r_v
             kpm: false
             sched: false
             ipv6: true
-          #5.10
           - file: oneplus_ace2_v
             kpm: false
             sched: false
@@ -121,12 +103,10 @@ jobs:
             kpm: false
             sched: false
             ipv6: true
-          #5.10
           - file: oneplus_ace_pro_v
             kpm: false
             sched: false
             ipv6: true
-          #5.15
           - file: oneplus_11_v
             kpm: false
             sched: false
@@ -135,7 +115,6 @@ jobs:
             kpm: false
             sched: false
             ipv6: true
-          #5.15
           - file: oneplus_12r_v
             kpm: false
             sched: false
@@ -144,7 +123,6 @@ jobs:
             kpm: false
             sched: false
             ipv6: true
-          #5.15
           - file: oneplus_ace2_pro_v
             kpm: false
             sched: false
@@ -155,7 +133,6 @@ jobs:
             sched: false
             ipv6: true
 
-          #          #5.15
           - file: oneplus_ace3_v
             kpm: false
             sched: false
@@ -165,8 +142,6 @@ jobs:
             kpm: false
             sched: false
             ipv6: true
-          #
-          #          #6系
           - file: oneplus_ace_3v_v
             kpm: true
             sched: false
@@ -211,7 +186,6 @@ jobs:
             sched: false
             ipv6: true
 
-          #
           - file: oneplus_ace5
             kpm: true
             sched: false
@@ -258,9 +232,6 @@ jobs:
             ipv6: true
 
 
-          #          - file: oneplus_13_global
-          #            kpm: true
-          #            sched: true
 
 
 
@@ -330,23 +301,9 @@ jobs:
             kpm: true
             sched: true
             ipv6: true
-            #- file: oneplus_ace5_ultra_b_vring
-            #  kpm: true
-            #  sched: true
-            #  ipv6: false
-
-          #- file: oneplus_ace5_ultra_b_vring
-          #  kpm: true
-          #  sched: true
-          #  ipv6: false
 
 
-#          - file: oneplus_15
-#            kpm: true
-#            sched: true
-#          - file: oneplus_15_vring
-#            kpm: true
-#            sched: false
+
 
     uses: ./.github/workflows/build-kernel.yml
     secrets: inherit
