@@ -117,7 +117,7 @@ jobs:
           declare -A REPOS
           REPOS["OnePlusOSS"]="OnePlusOSS|kernel_manifest"
           REPOS["Dynamic"]="${DYNAMIC_REPO_INPUT}|kernel_manifest_oplus"
-          REPOS["Appendix"]="Numbersf|Kernel_Manifest_Appendix"
+          REPOS["Appendix"]="Numbersf|kernel_manifest"
 
           FOUND_REPO=""
           FOUND_BRANCH=""
