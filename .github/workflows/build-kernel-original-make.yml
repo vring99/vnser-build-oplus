@@ -1096,13 +1096,13 @@ jobs:
           echo "========== Defconfig Debug =========="
           grep -E '^(CONFIG_LOCALVERSION|CONFIG_LTO_CLANG|CONFIG_LTO_CLANG_NONE|CONFIG_LTO_CLANG_THIN|CONFIG_MODULES|CONFIG_MODVERSIONS|CONFIG_RUST|CONFIG_KPM|CONFIG_KSU|CONFIG_KSU_SUSFS|CONFIG_CFG80211|CONFIG_WLAN)=' out/.config || true
           echo "====================================="
-          if [[ "$KERNEL_VERSION" == "5.10" || "$KERNEL_VERSION" == "5.15" ]]; then
-            echo ">> 设置 LTO = thin"
-            scripts/config --file out/.config -e LTO_CLANG
-            scripts/config --file out/.config -e LTO_CLANG_THIN
-            scripts/config --file out/.config -d LTO_CLANG_NONE
-            scripts/config --file out/.config -d LTO_CLANG_FULL
-          fi
+          #if [[ "$KERNEL_VERSION" == "5.10" || "$KERNEL_VERSION" == "5.15" ]]; then
+          #  echo ">> 设置 LTO = thin"
+          #  scripts/config --file out/.config -e LTO_CLANG
+          #  scripts/config --file out/.config -e LTO_CLANG_THIN
+          #  scripts/config --file out/.config -d LTO_CLANG_NONE
+          #  scripts/config --file out/.config -d LTO_CLANG_FULL
+          #fi
 
           make -j"$(nproc --all)" LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="clang" HOSTCC="clang" LD="ld.lld" HOSTLD="ld.lld" OBJCOPY="llvm-objcopy" O=out olddefconfig
           echo "========== Olddefconfig Debug =========="

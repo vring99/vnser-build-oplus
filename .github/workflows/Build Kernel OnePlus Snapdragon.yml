@@ -260,7 +260,7 @@ jobs:
             ipv6: true
 
 
-    uses: ./.github/workflows/build-kernel.yml
+    uses: ./.github/workflows/build-kernel-original-make.yml
     secrets: inherit
     with:
       FILE: ${{ matrix.file }}
