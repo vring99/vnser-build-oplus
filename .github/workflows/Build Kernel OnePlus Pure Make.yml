@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  vring-resukisu-6-12-make:
+  vring-resukisu-pure-make:
     strategy:
       fail-fast: false
       matrix:

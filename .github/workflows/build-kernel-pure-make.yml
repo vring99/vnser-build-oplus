@@ -548,8 +548,6 @@ jobs:
           #  git checkout ef16cbce
           #elif [ "$SUSFS_BRANCH" = "gki-android15-6.6" ]; then
           #  git checkout de8d8ca1
-          #elif [ "$SUSFS_BRANCH" = "gki-android16-6.12" ]; then
-          #  git checkout fd03bb9c
           #else
           #  echo "No specific commit for this"
           #  exit 500
@@ -882,7 +880,10 @@ jobs:
           IPV6="${{ inputs.IPV6 }}"
           # IPSET & IPv6_NAT配置*
           if [[ "${CPU}" == sm*  && "${IPV6}" = "true" ]]; then
-                   if [[ "$KERNEL_VERSION" != "6.12" ]]; then
+            KERNEL_MAJOR="${KERNEL_VERSION%%.*}"
+            KERNEL_MINOR="${KERNEL_VERSION#*.}"
+            KERNEL_MINOR="${KERNEL_MINOR%%.*}"
+            if (( KERNEL_MAJOR < 6 || (KERNEL_MAJOR == 6 && KERNEL_MINOR < 12) )); then
               echo "CONFIG_BPF_STREAM_PARSER=y" >> "$CONFIG_FILE"
             fi
             echo "CONFIG_NETFILTER_XT_MATCH_ADDRTYPE=y" >> "$CONFIG_FILE"
@@ -970,14 +971,15 @@ jobs:
         id: fast_build
         run: |
           KERNEL_VERSION="${{ env.KERNEL_VERSION }}"
-          if [[ "$KERNEL_VERSION" != "6.12" ]]; then
-            echo "::error::build-kernel-pure-make.yml only supports pure make flow, KERNEL_VERSION=$KERNEL_VERSION"
-            exit 1
-          fi
+          KANDROID_VERSION="${{ env.KANDROID_VERSION }}"
 
           cd kernel_workspace/kernel_platform/common
-          curl -L "https://raw.githubusercontent.com/cctv18/android_gki_kernel_common/refs/heads/android16-6.12-2025-06/_setup_env.sh" -o ./_setup_env.sh || true
-          source "./_setup_env.sh" 2>/dev/null || true
+          SETUP_ENV_BRANCH="${KANDROID_VERSION}-${KERNEL_VERSION}-2025-06"
+          if curl -fsSL "https://raw.githubusercontent.com/cctv18/android_gki_kernel_common/refs/heads/${SETUP_ENV_BRANCH}/_setup_env.sh" -o ./_setup_env.sh; then
+            source "./_setup_env.sh" || true
+          else
+            echo "未找到 ${SETUP_ENV_BRANCH}/_setup_env.sh，继续使用当前源码环境"
+          fi
 
           export PATH="$GITHUB_WORKSPACE/kernel_workspace/clang19/bin:$GITHUB_WORKSPACE/kernel_workspace/build-tools/bin:$GITHUB_WORKSPACE/kernel_workspace/rust/bin:$PATH"
           export PATH="/usr/lib/ccache:$PATH"
@@ -1031,11 +1033,8 @@ jobs:
             scripts/config --file out/.config -d LTO_CLANG_FULL
           fi
 
-          if [[ "$KERNEL_VERSION" == "6.12" ]]; then
-            echo ">> 设置 LTO = none"
-          fi
-          make -j"$(nproc --all)" LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" HOSTCC="ccache clang" LD="ld.lld" HOSTLD="ld.lld" OBJCOPY="llvm-objcopy" O=out olddefconfig
-          make -j"$(nproc --all)" LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" HOSTCC="ccache clang" LD="ld.lld" HOSTLD="ld.lld" OBJCOPY="llvm-objcopy" O=out Image
+          make -j"$(nproc --all)" LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="clang" HOSTCC="clang" LD="ld.lld" HOSTLD="ld.lld" OBJCOPY="llvm-objcopy" O=out olddefconfig
+          make -j"$(nproc --all)" LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="clang" HOSTCC="clang" LD="ld.lld" HOSTLD="ld.lld" OBJCOPY="llvm-objcopy" O=out Image
           strings out/arch/arm64/boot/Image | grep 'Linux version'
           ccache -s
 
