@@ -1004,9 +1004,6 @@ jobs:
           BINDGEN_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/clang-tools/linux-x86/bin/bindgen"
           if [[ -x "$BINDGEN_BIN" ]]; then
             BINDGEN_DIR=$(dirname "$BINDGEN_BIN")
-          elif [[ "${{ env.ENABLE_RUST }}" == "true" ]]; then
-            echo "::error::Rust 构建需要 bindgen，但不存在或不可执行: $BINDGEN_BIN"
-            exit 1
           fi
 
           cd common
@@ -1019,11 +1016,9 @@ jobs:
           unset CLANG_PREBUILT_BIN CLANG_VERSION
 
           if [[ "${{ env.ENABLE_RUST }}" == "true" ]]; then
-            export PATH="$CLANG_BIN:$BUILD_TOOLS_BIN:$RUST_BIN:$BINDGEN_DIR:$PATH"
-          elif [[ -n "$BINDGEN_DIR" ]]; then
-            export PATH="$CLANG_BIN:$BUILD_TOOLS_BIN:$BINDGEN_DIR:$PATH"
+            export PATH="$CLANG_BIN:$BUILD_TOOLS_BIN:$RUST_BIN${BINDGEN_DIR:+:$BINDGEN_DIR}:$PATH"
           else
-            export PATH="$CLANG_BIN:$BUILD_TOOLS_BIN:$PATH"
+            export PATH="$CLANG_BIN:$BUILD_TOOLS_BIN${BINDGEN_DIR:+:$BINDGEN_DIR}:$PATH"
           fi
           export LLVM=1 LLVM_IAS=1
           export ARCH=arm64 SUBARCH=arm64
@@ -1048,8 +1043,8 @@ jobs:
 
           if [[ "${{ env.ENABLE_RUST }}" == "true" ]]; then
             export RUSTC="rustc"
-            export BINDGEN="$BINDGEN_BIN"
           fi
+          [ -x "$BINDGEN_BIN" ] && export BINDGEN="$BINDGEN_BIN"
           export LIBCLANG_PATH="$CLANG_LIB"
 
           echo "========== Repo Toolchain Make Debug =========="
@@ -1070,36 +1065,20 @@ jobs:
           echo "RUST_BIN=${RUST_BIN}"
           echo "BUILD_TOOLS_BIN=${BUILD_TOOLS_BIN}"
           echo "BINDGEN_BIN=${BINDGEN_BIN}"
-          echo "BINDGEN_DIR=${BINDGEN_DIR}"
-          echo "BINDGEN_EXISTS=$([ -x "$BINDGEN_BIN" ] && echo yes || echo no)"
-          echo "Bindgen common candidates:"
-          for candidate in \
-            "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/clang-tools/linux-x86/bin/bindgen" \
-            "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/build-tools/linux-x86/bin/bindgen" \
-            "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/rust/linux-x86/${{ env.RUSTC_VERSION }}/bin/bindgen" \
-            "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/bindgen/linux-x86/bin/bindgen"; do
-            if [ -e "$candidate" ]; then
-              ls -l "$candidate" || true
-            else
-              echo "missing $candidate"
-            fi
-          done
-          echo "Bindgen search under prebuilts:"
-          find "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts" -maxdepth 5 \( -type f -o -type l \) -name bindgen -print 2>/dev/null || true
           echo "PATH_HEAD=$(echo "$PATH" | tr ':' '\n' | head -n 10 | paste -sd ':' -)"
           echo "which clang=$(command -v clang || true)"
           echo "which ld.lld=$(command -v ld.lld || true)"
           if [[ "${{ env.ENABLE_RUST }}" == "true" ]]; then
             echo "which rustc=$(command -v rustc || true)"
-            echo "which bindgen=$(command -v bindgen || true)"
-            echo "BINDGEN=${BINDGEN}"
           fi
+          echo "which bindgen=$(command -v bindgen || true)"
+          echo "BINDGEN=${BINDGEN:-}"
           echo "PAHOLE=${PAHOLE}"
           clang --version | head -n 2 || true
           if [[ "${{ env.ENABLE_RUST }}" == "true" ]]; then
             rustc --version || true
-            bindgen --version || true
           fi
+          [ -x "$BINDGEN_BIN" ] && bindgen --version || true
           "$PAHOLE" --version || true
           echo "LLVM=${LLVM} LLVM_IAS=${LLVM_IAS} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE}"
           echo "CC=${CC} HOSTCC=${HOSTCC} LD=${LD} HOSTLD=${HOSTLD}"
