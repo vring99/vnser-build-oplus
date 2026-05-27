@@ -1070,6 +1070,22 @@ jobs:
           echo "RUST_BIN=${RUST_BIN}"
           echo "BUILD_TOOLS_BIN=${BUILD_TOOLS_BIN}"
           echo "BINDGEN_BIN=${BINDGEN_BIN}"
+          echo "BINDGEN_DIR=${BINDGEN_DIR}"
+          echo "BINDGEN_EXISTS=$([ -x "$BINDGEN_BIN" ] && echo yes || echo no)"
+          echo "Bindgen common candidates:"
+          for candidate in \
+            "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/clang-tools/linux-x86/bin/bindgen" \
+            "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/build-tools/linux-x86/bin/bindgen" \
+            "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/rust/linux-x86/${{ env.RUSTC_VERSION }}/bin/bindgen" \
+            "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/bindgen/linux-x86/bin/bindgen"; do
+            if [ -e "$candidate" ]; then
+              ls -l "$candidate" || true
+            else
+              echo "missing $candidate"
+            fi
+          done
+          echo "Bindgen search under prebuilts:"
+          find "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts" -maxdepth 5 \( -type f -o -type l \) -name bindgen -print 2>/dev/null || true
           echo "PATH_HEAD=$(echo "$PATH" | tr ':' '\n' | head -n 10 | paste -sd ':' -)"
           echo "which clang=$(command -v clang || true)"
           echo "which ld.lld=$(command -v ld.lld || true)"
