@@ -994,7 +994,7 @@ jobs:
           BINDGEN_DIR=$(dirname "$BINDGEN_BIN")
 
           cd common
-          SETUP_ENV_BRANCH="${KANDROID_VERSION}-${KERNEL_VERSION}-2025-06"
+          SETUP_ENV_BRANCH="android16-6.12-2025-06"
           if curl -fsSL "https://raw.githubusercontent.com/cctv18/android_gki_kernel_common/refs/heads/${SETUP_ENV_BRANCH}/_setup_env.sh" -o ./_setup_env.sh; then
             source "./_setup_env.sh" || true
           else
