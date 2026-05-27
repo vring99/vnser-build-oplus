@@ -15,6 +15,14 @@ jobs:
             kpm: true
             sched: false
             ipv6: false
+          - file: oneplus_15t_Canary
+            kpm: true
+            sched: false
+            ipv6: true
+          - file: oneplus_10_pro_v
+            kpm: true
+            sched: false
+            ipv6: true
     uses: ./.github/workflows/build-kernel-original-make.yml
     secrets: inherit
     with:
