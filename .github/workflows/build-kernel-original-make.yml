@@ -962,28 +962,28 @@ jobs:
 
           cd kernel_workspace/kernel_platform
 
-          CLANG_PREBUILT_BIN=""
+          REPO_CLANG_PREBUILT_BIN=""
           for f in ./common/build.config.common ./"$KERNEL_REPOS"/build.config.common; do
             [[ -f "$f" ]] || continue
-            CLANG_PREBUILT_BIN=$(grep '^CLANG_PREBUILT_BIN=' "$f" | cut -d'=' -f2)
-            [[ -n "$CLANG_PREBUILT_BIN" ]] && break
+            REPO_CLANG_PREBUILT_BIN=$(grep '^CLANG_PREBUILT_BIN=' "$f" | cut -d'=' -f2)
+            [[ -n "$REPO_CLANG_PREBUILT_BIN" ]] && break
           done
-          if [[ -z "$CLANG_PREBUILT_BIN" ]]; then
+          if [[ -z "$REPO_CLANG_PREBUILT_BIN" ]]; then
             echo "::error::CLANG_PREBUILT_BIN 未在 build.config.common 中找到"
             exit 1
           fi
 
-          if [[ "$CLANG_PREBUILT_BIN" =~ (clang-r[0-9a-z]+) ]]; then
-            CLANG_VERSION="${BASH_REMATCH[1]}"
+          if [[ "$REPO_CLANG_PREBUILT_BIN" =~ (clang-r[0-9a-z]+) ]]; then
+            REPO_CLANG_VERSION="${BASH_REMATCH[1]}"
           elif [[ -f ./common/build.config.constants ]]; then
-            CLANG_VERSION=$(grep '^CLANG_VERSION=' ./common/build.config.constants | cut -d'=' -f2 || true)
+            REPO_CLANG_VERSION=$(grep '^CLANG_VERSION=' ./common/build.config.constants | cut -d'=' -f2 || true)
           fi
-          if [[ -n "$CLANG_VERSION" ]]; then
-            CLANG_PREBUILT_BIN=${CLANG_PREBUILT_BIN/\$\{CLANG_VERSION\}/$CLANG_VERSION}
+          if [[ -n "$REPO_CLANG_VERSION" ]]; then
+            REPO_CLANG_PREBUILT_BIN=${REPO_CLANG_PREBUILT_BIN/\$\{CLANG_VERSION\}/$REPO_CLANG_VERSION}
           fi
 
-          CLANG_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$CLANG_PREBUILT_BIN"
-          CLANG_LIB="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$(dirname "$CLANG_PREBUILT_BIN")/lib"
+          CLANG_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$REPO_CLANG_PREBUILT_BIN"
+          CLANG_LIB="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$(dirname "$REPO_CLANG_PREBUILT_BIN")/lib"
           RUST_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/rust/linux-x86/${{ env.RUSTC_VERSION }}/bin"
           BUILD_TOOLS_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/kernel-build-tools/linux-x86/bin"
           BINDGEN_BIN=""
@@ -1002,14 +1002,14 @@ jobs:
           if [[ -z "$BINDGEN_BIN" ]]; then
             echo "未在源码 prebuilts 中找到 bindgen，尝试从 Android 官方 clang prebuilts 补齐"
             find "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts" -maxdepth 4 -type d -iname '*bindgen*' -o -type f -name bindgen 2>/dev/null || true
-            if [[ -z "$CLANG_VERSION" ]]; then
+            if [[ -z "$REPO_CLANG_VERSION" ]]; then
               echo "::error::CLANG_VERSION 为空，无法定位官方 bindgen"
               exit 1
             fi
             BINDGEN_FALLBACK_DIR="$GITHUB_WORKSPACE/kernel_workspace/bindgen-official/bin"
             BINDGEN_FALLBACK="$BINDGEN_FALLBACK_DIR/bindgen"
             BINDGEN_FALLBACK_B64="$BINDGEN_FALLBACK_DIR/bindgen.b64"
-            BINDGEN_URL="https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+/refs/heads/android16-release/${CLANG_VERSION}/bin/bindgen?format=TEXT"
+            BINDGEN_URL="https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+/refs/heads/android16-release/${REPO_CLANG_VERSION}/bin/bindgen?format=TEXT"
             mkdir -p "$BINDGEN_FALLBACK_DIR"
             if curl -fsSL "$BINDGEN_URL" -o "$BINDGEN_FALLBACK_B64" && base64 -d "$BINDGEN_FALLBACK_B64" > "$BINDGEN_FALLBACK" && [[ -s "$BINDGEN_FALLBACK" ]]; then
               chmod +x "$BINDGEN_FALLBACK"
@@ -1029,6 +1029,7 @@ jobs:
           else
             echo "未找到 ${SETUP_ENV_BRANCH}/_setup_env.sh，继续使用当前源码环境"
           fi
+          unset CLANG_PREBUILT_BIN CLANG_VERSION
 
           export PATH="$CLANG_BIN:$BUILD_TOOLS_BIN:$RUST_BIN:$BINDGEN_DIR:$PATH"
           export LLVM=1 LLVM_IAS=1
@@ -1066,7 +1067,9 @@ jobs:
           echo "TKERNEL_VERSION=${{ env.TKERNEL_VERSION }}"
           echo "RUSTC_VERSION=${{ env.RUSTC_VERSION }}"
           echo "SETUP_ENV_BRANCH=${SETUP_ENV_BRANCH}"
-          echo "CLANG_PREBUILT_BIN=${CLANG_PREBUILT_BIN}"
+          echo "REPO_CLANG_PREBUILT_BIN=${REPO_CLANG_PREBUILT_BIN}"
+          echo "REPO_CLANG_VERSION=${REPO_CLANG_VERSION}"
+          echo "ENV_CLANG_PREBUILT_BIN=${CLANG_PREBUILT_BIN:-}"
           echo "CLANG_BIN=${CLANG_BIN}"
           echo "CLANG_LIB=${CLANG_LIB}"
           echo "RUST_BIN=${RUST_BIN}"
