@@ -986,39 +986,10 @@ jobs:
           CLANG_LIB="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$(dirname "$REPO_CLANG_PREBUILT_BIN")/lib"
           RUST_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/rust/linux-x86/${{ env.RUSTC_VERSION }}/bin"
           BUILD_TOOLS_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/kernel-build-tools/linux-x86/bin"
-          BINDGEN_BIN=""
-          for candidate in \
-            "$RUST_BIN/bindgen" \
-            "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/bindgen/linux-x86/bin/bindgen" \
-            "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/clang-tools/linux-x86/bin/bindgen"; do
-            if [[ -x "$candidate" ]]; then
-              BINDGEN_BIN="$candidate"
-              break
-            fi
-          done
-          if [[ -z "$BINDGEN_BIN" ]]; then
-            BINDGEN_BIN=$(find "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts" -type f -name bindgen -perm -111 2>/dev/null | head -n 1 || true)
-          fi
-          if [[ -z "$BINDGEN_BIN" ]]; then
-            echo "未在源码 prebuilts 中找到 bindgen，尝试从 Android 官方 clang prebuilts 补齐"
-            find "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts" -maxdepth 4 -type d -iname '*bindgen*' -o -type f -name bindgen 2>/dev/null || true
-            if [[ -z "$REPO_CLANG_VERSION" ]]; then
-              echo "::error::CLANG_VERSION 为空，无法定位官方 bindgen"
-              exit 1
-            fi
-            BINDGEN_FALLBACK_DIR="$GITHUB_WORKSPACE/kernel_workspace/bindgen-official/bin"
-            BINDGEN_FALLBACK="$BINDGEN_FALLBACK_DIR/bindgen"
-            BINDGEN_FALLBACK_B64="$BINDGEN_FALLBACK_DIR/bindgen.b64"
-            BINDGEN_URL="https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+/refs/heads/android16-release/${REPO_CLANG_VERSION}/bin/bindgen?format=TEXT"
-            mkdir -p "$BINDGEN_FALLBACK_DIR"
-            if curl -fsSL "$BINDGEN_URL" -o "$BINDGEN_FALLBACK_B64" && base64 -d "$BINDGEN_FALLBACK_B64" > "$BINDGEN_FALLBACK" && [[ -s "$BINDGEN_FALLBACK" ]]; then
-              chmod +x "$BINDGEN_FALLBACK"
-              BINDGEN_BIN="$BINDGEN_FALLBACK"
-              rm -f "$BINDGEN_FALLBACK_B64"
-            else
-              echo "::error::官方 bindgen 下载失败: $BINDGEN_URL"
-              exit 1
-            fi
+          BINDGEN_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/clang-tools/linux-x86/bin/bindgen"
+          if [[ ! -x "$BINDGEN_BIN" ]]; then
+            echo "::error::bindgen 不存在或不可执行: $BINDGEN_BIN"
+            exit 1
           fi
           BINDGEN_DIR=$(dirname "$BINDGEN_BIN")
 
