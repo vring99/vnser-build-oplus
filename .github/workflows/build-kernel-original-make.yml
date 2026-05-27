@@ -986,12 +986,16 @@ jobs:
           CLANG_LIB="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$(dirname "$REPO_CLANG_PREBUILT_BIN")/lib"
           RUST_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/rust/linux-x86/${{ env.RUSTC_VERSION }}/bin"
           BUILD_TOOLS_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/kernel-build-tools/linux-x86/bin"
-          BINDGEN_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/clang-tools/linux-x86/bin/bindgen"
-          if [[ ! -x "$BINDGEN_BIN" ]]; then
-            echo "::error::bindgen 不存在或不可执行: $BINDGEN_BIN"
-            exit 1
+          BINDGEN_DIR=""
+          BINDGEN_BIN=""
+          if [[ "${{ env.ENABLE_RUST }}" == "true" ]]; then
+            BINDGEN_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/clang-tools/linux-x86/bin/bindgen"
+            if [[ ! -x "$BINDGEN_BIN" ]]; then
+              echo "::error::bindgen 不存在或不可执行: $BINDGEN_BIN"
+              exit 1
+            fi
+            BINDGEN_DIR=$(dirname "$BINDGEN_BIN")
           fi
-          BINDGEN_DIR=$(dirname "$BINDGEN_BIN")
 
           cd common
           SETUP_ENV_BRANCH="android16-6.12-2025-06"
@@ -1002,7 +1006,11 @@ jobs:
           fi
           unset CLANG_PREBUILT_BIN CLANG_VERSION
 
-          export PATH="$CLANG_BIN:$BUILD_TOOLS_BIN:$RUST_BIN:$BINDGEN_DIR:$PATH"
+          if [[ "${{ env.ENABLE_RUST }}" == "true" ]]; then
+            export PATH="$CLANG_BIN:$BUILD_TOOLS_BIN:$RUST_BIN:$BINDGEN_DIR:$PATH"
+          else
+            export PATH="$CLANG_BIN:$BUILD_TOOLS_BIN:$PATH"
+          fi
           export LLVM=1 LLVM_IAS=1
           export ARCH=arm64 SUBARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
@@ -1024,8 +1032,10 @@ jobs:
           export CCACHE_NOHARDLINK="true"
           export CCACHE_COMPILERCHECK="none"
 
-          export RUSTC="rustc"
-          export BINDGEN="$BINDGEN_BIN"
+          if [[ "${{ env.ENABLE_RUST }}" == "true" ]]; then
+            export RUSTC="rustc"
+            export BINDGEN="$BINDGEN_BIN"
+          fi
           export LIBCLANG_PATH="$CLANG_LIB"
 
           echo "========== Repo Toolchain Make Debug =========="
@@ -1049,13 +1059,17 @@ jobs:
           echo "PATH_HEAD=$(echo "$PATH" | tr ':' '\n' | head -n 10 | paste -sd ':' -)"
           echo "which clang=$(command -v clang || true)"
           echo "which ld.lld=$(command -v ld.lld || true)"
-          echo "which rustc=$(command -v rustc || true)"
-          echo "which bindgen=$(command -v bindgen || true)"
-          echo "BINDGEN=${BINDGEN}"
+          if [[ "${{ env.ENABLE_RUST }}" == "true" ]]; then
+            echo "which rustc=$(command -v rustc || true)"
+            echo "which bindgen=$(command -v bindgen || true)"
+            echo "BINDGEN=${BINDGEN}"
+          fi
           echo "PAHOLE=${PAHOLE}"
           clang --version | head -n 2 || true
-          rustc --version || true
-          bindgen --version || true
+          if [[ "${{ env.ENABLE_RUST }}" == "true" ]]; then
+            rustc --version || true
+            bindgen --version || true
+          fi
           "$PAHOLE" --version || true
           echo "LLVM=${LLVM} LLVM_IAS=${LLVM_IAS} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE}"
           echo "CC=${CC} HOSTCC=${HOSTCC} LD=${LD} HOSTLD=${HOSTLD}"
