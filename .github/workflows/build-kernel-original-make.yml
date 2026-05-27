@@ -1001,14 +1001,12 @@ jobs:
           RUST_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/rust/linux-x86/${{ env.RUSTC_VERSION }}/bin"
           BUILD_TOOLS_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/kernel-build-tools/linux-x86/bin"
           BINDGEN_DIR=""
-          BINDGEN_BIN=""
-          if [[ "${{ env.ENABLE_RUST }}" == "true" ]]; then
-            BINDGEN_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/clang-tools/linux-x86/bin/bindgen"
-            if [[ ! -x "$BINDGEN_BIN" ]]; then
-              echo "::error::bindgen 不存在或不可执行: $BINDGEN_BIN"
-              exit 1
-            fi
+          BINDGEN_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/clang-tools/linux-x86/bin/bindgen"
+          if [[ -x "$BINDGEN_BIN" ]]; then
             BINDGEN_DIR=$(dirname "$BINDGEN_BIN")
+          elif [[ "${{ env.ENABLE_RUST }}" == "true" ]]; then
+            echo "::error::Rust 构建需要 bindgen，但不存在或不可执行: $BINDGEN_BIN"
+            exit 1
           fi
 
           cd common
@@ -1022,6 +1020,8 @@ jobs:
 
           if [[ "${{ env.ENABLE_RUST }}" == "true" ]]; then
             export PATH="$CLANG_BIN:$BUILD_TOOLS_BIN:$RUST_BIN:$BINDGEN_DIR:$PATH"
+          elif [[ -n "$BINDGEN_DIR" ]]; then
+            export PATH="$CLANG_BIN:$BUILD_TOOLS_BIN:$BINDGEN_DIR:$PATH"
           else
             export PATH="$CLANG_BIN:$BUILD_TOOLS_BIN:$PATH"
           fi
