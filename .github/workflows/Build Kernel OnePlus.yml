@@ -1,4 +1,4 @@
-name: build-kernel
+name: build-kernel-www
 permissions:
   contents: write  # Allow writing to repository contents (for pushing tags)
   actions: write   # Allows triggering actions
