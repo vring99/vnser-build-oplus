@@ -11,22 +11,100 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - file: oneplus_ace5_race_b
+          - file: oneplus_10_pro_v
+            kpm: true
+            sched: false
+            ipv6: true
+
+          - file: oneplus_10_pro_b
+            kpm: true
+            sched: false
+            ipv6: true
+
+          - file: oneplus_10t_v
+            kpm: true
+            sched: false
+            ipv6: true
+          #- file: oneplus_11r_v
+          #  kpm: true
+          #  sched: false
+          #  ipv6: true
+          - file: oneplus_ace2_v
+            kpm: true
+            sched: false
+            ipv6: true
+
+          - file: oneplus_ace2_b
+            kpm: true
+            sched: false
+            ipv6: true
+
+          - file: oneplus_ace_pro_v
+            kpm: true
+            sched: false
+            ipv6: true
+          - file: oneplus_11_v
+            kpm: true
+            sched: false
+            ipv6: true
+
+          - file: oneplus_11_b
+            kpm: true
+            sched: false
+            ipv6: true
+          #- file: oneplus_12r_v
+          #  kpm: true
+          #  sched: false
+          #  ipv6: true
+          #- file: oneplus_12r_b
+          #  kpm: true
+          #  sched: false
+          #  ipv6: true
+          - file: oneplus_ace2_pro_v
+            kpm: true
+            sched: false
+            ipv6: true
+
+          - file: oneplus_ace2_pro_b
+            kpm: true
+            sched: false
+            ipv6: true
+
+          - file: oneplus_ace3_v
+            kpm: true
+            sched: false
+            ipv6: true
+          - file: oneplus_ace3_b
+            kpm: true
+            sched: false
+            ipv6: true
+
+          - file: oneplus_ace_6t_Canary
+            kpm: true
+            sched: false
+            ipv6: true
+          - file: oneplus_15_Canary
+            kpm: true
+            sched: false
+            ipv6: true
+          - file: oneplus_15t_Canary
+            kpm: true
+            sched: false
+            ipv6: true
+          - file: oneplus_pad_4_Canary
+            kpm: true
+            sched: false
+            ipv6: true
+
+          - file: oneplus_pad_3_pro_Canary
+            kpm: true
+            sched: false
+            ipv6: true
+
+          - file: oneplus_ace6_ultra_vring
             kpm: true
             sched: false
             ipv6: false
-
-          - file: oneplus_ace5_race
-            kpm: true
-            sched: false
-            ipv6: false
-
-          - file: oneplus_ace5_ultra_b
-            kpm: true
-            sched: true
-            ipv6: false
-
-
     uses: ./.github/workflows/build-kernel-original-make.yml
     secrets: inherit
     with:

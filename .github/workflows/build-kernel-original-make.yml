@@ -411,7 +411,15 @@ jobs:
           cd kernel_workspace
           SUFFIX="${{ inputs.SUFFIX }}"
           KANDROID_VERSION="${{ env.KANDROID_VERSION }}"
+          KERNEL_VERSION="${{ env.KERNEL_VERSION }}"
           FAST_BUILD="${{ inputs.FAST_BUILD }}"
+          if [ "$KERNEL_VERSION" = "6.12" ]; then
+            GIT_PART=$(od -An -N6 -tx1 /dev/urandom | tr -d ' \n')
+            AB_PART=$(printf "%08d" $(( $(od -An -N4 -tu4 /dev/urandom) % 100000000 )))
+            VERSION_SUFFIX="5-g${GIT_PART}-ab${AB_PART}-4k"
+          else
+            VERSION_SUFFIX="$SUFFIX"
+          fi
           
           for path in \
             kernel_platform/common/scripts/setlocalversion \
@@ -428,13 +436,13 @@ jobs:
           
             if grep -q 'KERNELVERSION.*scm_version' "$path"; then
               echo "Detected NEW setlocalversion format"
-              sed -i "s|echo \"\${KERNELVERSION}.*scm_version}\"|echo \"\${KERNELVERSION}-${KANDROID_VERSION}-${SUFFIX}\"|" "$path"
+              sed -i "s|echo \"\${KERNELVERSION}.*scm_version}\"|echo \"\${KERNELVERSION}-${KANDROID_VERSION}-${VERSION_SUFFIX}\"|" "$path"
           
             elif grep -q 'echo "\$res"' "$path"; then
               echo "Detected OLD setlocalversion format"
               if [ "$FAST_BUILD" = "true" ]; then
                 echo "FAST_BUILD enabled: using static res"
-                sed -i "s/^res=.*/res=\"-${KANDROID_VERSION}-${SUFFIX}\"/" "$path"
+                sed -i "s/^res=.*/res=\"-${KANDROID_VERSION}-${VERSION_SUFFIX}\"/" "$path"
               else
                 echo "Standard build: injecting suffix via cut/echo"
                 if [[ -f ./kernel_platform/build_with_bazel.py ]]; then
@@ -445,7 +453,7 @@ jobs:
               fi
             else
               echo "Unknown format, appending echo manually"
-              echo "echo \"\$res-${SUFFIX}\"" >> "$path"
+              echo "echo \"\$res-${VERSION_SUFFIX}\"" >> "$path"
             fi
           
             chmod +x "$path"
@@ -460,12 +468,18 @@ jobs:
         run: |
           cd kernel_workspace
           KANDROID_VERSION="${{ env.KANDROID_VERSION }}"
+          KERNEL_VERSION="${{ env.KERNEL_VERSION }}"
           FAST_BUILD="${{ inputs.FAST_BUILD }}"
           
           # 生成随机数字和随机hash
           RANDOM_DIGIT=$(od -An -N1 -tu1 < /dev/urandom | tr -d '[:space:]' | awk '{print $1 % 11}')
           RANDOM_HASH=$(od -An -N7 -tx1 /dev/urandom | tr -d ' \n')
           RANDOM_SUFFIX="${RANDOM_DIGIT}-o-g${RANDOM_HASH}"
+          if [ "$KERNEL_VERSION" = "6.12" ]; then
+            GIT_PART=$(od -An -N6 -tx1 /dev/urandom | tr -d ' \n')
+            AB_PART=$(printf "%08d" $(( $(od -An -N4 -tu4 /dev/urandom) % 100000000 )))
+            RANDOM_SUFFIX="5-g${GIT_PART}-ab${AB_PART}-4k"
+          fi
           
           for path in \
             kernel_platform/common/scripts/setlocalversion \
@@ -1096,13 +1110,13 @@ jobs:
           echo "========== Defconfig Debug =========="
           grep -E '^(CONFIG_LOCALVERSION|CONFIG_LTO_CLANG|CONFIG_LTO_CLANG_NONE|CONFIG_LTO_CLANG_THIN|CONFIG_MODULES|CONFIG_MODVERSIONS|CONFIG_RUST|CONFIG_KPM|CONFIG_KSU|CONFIG_KSU_SUSFS|CONFIG_CFG80211|CONFIG_WLAN)=' out/.config || true
           echo "====================================="
-          #if [[ "$KERNEL_VERSION" == "5.10" || "$KERNEL_VERSION" == "5.15" ]]; then
-          #  echo ">> 设置 LTO = thin"
-          #  scripts/config --file out/.config -e LTO_CLANG
-          #  scripts/config --file out/.config -e LTO_CLANG_THIN
-          #  scripts/config --file out/.config -d LTO_CLANG_NONE
-          #  scripts/config --file out/.config -d LTO_CLANG_FULL
-          #fi
+          if [[ "$KERNEL_VERSION" == "5.10" || "$KERNEL_VERSION" == "5.15" ]]; then
+            echo ">> 设置 LTO = thin"
+            scripts/config --file out/.config -e LTO_CLANG
+            scripts/config --file out/.config -e LTO_CLANG_THIN
+            scripts/config --file out/.config -d LTO_CLANG_NONE
+            scripts/config --file out/.config -d LTO_CLANG_FULL
+          fi
 
           make -j"$(nproc --all)" LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="clang" HOSTCC="clang" LD="ld.lld" HOSTLD="ld.lld" OBJCOPY="llvm-objcopy" O=out olddefconfig
           echo "========== Olddefconfig Debug =========="
