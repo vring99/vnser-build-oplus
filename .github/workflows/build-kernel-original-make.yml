@@ -976,7 +976,8 @@ jobs:
           cd kernel_workspace/kernel_platform/common
           SETUP_ENV_BRANCH="${KANDROID_VERSION}-${KERNEL_VERSION}-2025-06"
           if curl -fsSL "https://raw.githubusercontent.com/cctv18/android_gki_kernel_common/refs/heads/${SETUP_ENV_BRANCH}/_setup_env.sh" -o ./_setup_env.sh; then
-            source "./_setup_env.sh" || true
+            #source "./_setup_env.sh" || true
+            echo "已找到 ${SETUP_ENV_BRANCH}/_setup_env.sh"
           else
             echo "未找到 ${SETUP_ENV_BRANCH}/_setup_env.sh，继续使用当前源码环境"
           fi
@@ -1008,29 +1009,6 @@ jobs:
           export BINDGEN="bindgen"
           export LIBCLANG_PATH="$GITHUB_WORKSPACE/kernel_workspace/clang19/lib"
 
-          echo "========== Pure-Aligned Make Debug =========="
-          echo "FILE=${{ inputs.FILE }}"
-          echo "CPU=${{ env.CPU }}"
-          echo "CPUD=${{ env.CPUD }}"
-          echo "BUILD_METHOD=${{ env.BUILD_METHOD }}"
-          echo "KANDROID_VERSION=${KANDROID_VERSION}"
-          echo "KERNEL_VERSION=${KERNEL_VERSION}"
-          echo "TKERNEL_VERSION=${{ env.TKERNEL_VERSION }}"
-          echo "SETUP_ENV_BRANCH=${SETUP_ENV_BRANCH}"
-          echo "PATH_HEAD=$(echo "$PATH" | tr ':' '\n' | head -n 8 | paste -sd ':' -)"
-          echo "CC=$(command -v clang || true)"
-          echo "LD=$(command -v ld.lld || true)"
-          echo "RUSTC=$(command -v rustc || true)"
-          echo "BINDGEN=$(command -v bindgen || true)"
-          echo "PAHOLE=${PAHOLE}"
-          clang --version | head -n 2 || true
-          rustc --version || true
-          bindgen --version || true
-          "$PAHOLE" --version || true
-          echo "LLVM=${LLVM} LLVM_IAS=${LLVM_IAS} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE}"
-          echo "LIBCLANG_PATH=${LIBCLANG_PATH}"
-          echo "============================================="
-
           COMMON_REAL_PATH=$(pwd -P)
           PLATFORM_REAL_PATH=$(dirname "$COMMON_REAL_PATH")
           ROOT_REAL_PATH=$(dirname "$PLATFORM_REAL_PATH")
@@ -1048,10 +1026,6 @@ jobs:
           export KCFLAGS
 
           make -j"$(nproc --all)" LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="clang" HOSTCC="clang" LD="ld.lld" HOSTLD="ld.lld" OBJCOPY="llvm-objcopy" O=out gki_defconfig
-          echo "========== Defconfig Debug =========="
-          grep -E '^(CONFIG_LOCALVERSION|CONFIG_LTO_CLANG|CONFIG_LTO_CLANG_NONE|CONFIG_LTO_CLANG_THIN|CONFIG_MODULES|CONFIG_MODVERSIONS|CONFIG_RUST|CONFIG_KPM|CONFIG_KSU|CONFIG_KSU_SUSFS|CONFIG_CFG80211|CONFIG_WLAN)=' out/.config || true
-          echo "CONFIG_LOCALVERSION=$(grep '^CONFIG_LOCALVERSION=' out/.config || true)"
-          echo "====================================="
           if [[ "$KERNEL_VERSION" == "5.10" || "$KERNEL_VERSION" == "5.15" ]]; then
             echo ">> 设置 LTO = thin"
             scripts/config --file out/.config -e LTO_CLANG
@@ -1061,80 +1035,9 @@ jobs:
           fi
 
           make -j"$(nproc --all)" LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="clang" HOSTCC="clang" LD="ld.lld" HOSTLD="ld.lld" OBJCOPY="llvm-objcopy" O=out olddefconfig
-          echo "========== Olddefconfig Debug =========="
-          grep -E '^(CONFIG_LOCALVERSION|CONFIG_LTO_CLANG|CONFIG_LTO_CLANG_NONE|CONFIG_LTO_CLANG_THIN|CONFIG_MODULES|CONFIG_MODVERSIONS|CONFIG_RUST|CONFIG_KPM|CONFIG_KSU|CONFIG_KSU_SUSFS|CONFIG_CFG80211|CONFIG_WLAN)=' out/.config || true
-          echo "========================================"
           make -j"$(nproc --all)" LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="clang" HOSTCC="clang" LD="ld.lld" HOSTLD="ld.lld" OBJCOPY="llvm-objcopy" O=out Image
-          echo "========== Image Debug =========="
-          ls -lh out/arch/arm64/boot/Image || true
-          file out/arch/arm64/boot/Image || true
-          sha256sum out/arch/arm64/boot/Image || true
-          echo "Image strings:"
-          strings out/arch/arm64/boot/Image | grep -E 'Linux version|clang version|rustc version|SukiSU|KernelSU|susfs' | head -n 30 || true
-          echo "================================="
           strings out/arch/arm64/boot/Image | grep 'Linux version'
           ccache -s
-
-      - name: Collect Build Debug Artifacts
-        if: always()
-        run: |
-          DEBUG_DIR="$GITHUB_WORKSPACE/build-debug"
-          COMMON_OUT="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/common/out"
-          mkdir -p "$DEBUG_DIR"
-
-          {
-            echo "FILE=${{ inputs.FILE }}"
-            echo "CPU=${{ env.CPU }}"
-            echo "CPUD=${{ env.CPUD }}"
-            echo "BUILD_METHOD=${{ env.BUILD_METHOD }}"
-            echo "KANDROID_VERSION=${{ env.KANDROID_VERSION }}"
-            echo "KERNEL_VERSION=${{ env.KERNEL_VERSION }}"
-            echo "TKERNEL_VERSION=${{ env.TKERNEL_VERSION }}"
-            echo "KPM=${{ inputs.KPM }}"
-            echo "IPV6=${{ inputs.IPV6 }}"
-            echo "SCHED=${{ inputs.SCHED }}"
-            echo "LSM=${{ inputs.LSM }}"
-            echo "ZRAM=${{ inputs.ZRAM }}"
-          } > "$DEBUG_DIR/build-inputs.txt"
-
-          {
-            echo "PATH=$PATH"
-            echo "CC=$(command -v clang || true)"
-            echo "LD=$(command -v ld.lld || true)"
-            echo "RUSTC=$(command -v rustc || true)"
-            echo "BINDGEN=$(command -v bindgen || true)"
-            echo "PAHOLE=$GITHUB_WORKSPACE/kernel_workspace/build-tools/bin/pahole"
-            clang --version || true
-            rustc --version || true
-            bindgen --version || true
-            "$GITHUB_WORKSPACE/kernel_workspace/build-tools/bin/pahole" --version || true
-          } > "$DEBUG_DIR/toolchain.txt" 2>&1
-
-          cp "$COMMON_OUT/.config" "$DEBUG_DIR/config.final" 2>/dev/null || true
-          cp "$COMMON_OUT/System.map" "$DEBUG_DIR/System.map" 2>/dev/null || true
-          cp "$COMMON_OUT/vmlinux.symvers" "$DEBUG_DIR/vmlinux.symvers" 2>/dev/null || true
-          cp "$COMMON_OUT/Module.symvers" "$DEBUG_DIR/Module.symvers" 2>/dev/null || true
-          cp "$COMMON_OUT/include/generated/compile.h" "$DEBUG_DIR/compile.h" 2>/dev/null || true
-          cp "$COMMON_OUT/include/generated/utsrelease.h" "$DEBUG_DIR/utsrelease.h" 2>/dev/null || true
-          cp "$COMMON_OUT/include/generated/autoconf.h" "$DEBUG_DIR/autoconf.h" 2>/dev/null || true
-
-          if [ -f "$COMMON_OUT/arch/arm64/boot/Image" ]; then
-            ls -lh "$COMMON_OUT/arch/arm64/boot/Image" > "$DEBUG_DIR/Image.info" || true
-            file "$COMMON_OUT/arch/arm64/boot/Image" >> "$DEBUG_DIR/Image.info" || true
-            sha256sum "$COMMON_OUT/arch/arm64/boot/Image" >> "$DEBUG_DIR/Image.info" || true
-            strings "$COMMON_OUT/arch/arm64/boot/Image" | grep -E 'Linux version|clang version|rustc version|SukiSU|KernelSU|susfs|cfg80211|wiphy|wlan|oplus|android' > "$DEBUG_DIR/Image.strings.filtered" || true
-          fi
-
-          if [ -f "$COMMON_OUT/.config" ]; then
-            grep -E '^(CONFIG_LOCALVERSION|CONFIG_LTO|CONFIG_MODULES|CONFIG_MODVERSIONS|CONFIG_RUST|CONFIG_KPM|CONFIG_KSU|CONFIG_KSU_SUSFS|CONFIG_CFG80211|CONFIG_WLAN|CONFIG_QCOM|CONFIG_OPLUS|CONFIG_ANDROID|CONFIG_GKI|CONFIG_SYSTEM_TRUSTED_KEYS|CONFIG_SYSTEM_REVOCATION_KEYS)=' "$COMMON_OUT/.config" > "$DEBUG_DIR/config.key" || true
-          fi
-
-      - name: Upload Build Debug Artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: debug-${{ inputs.FILE }}-${{ env.TKERNEL_VERSION }}
-          path: build-debug/*
 
       - name: Stop on original make fallback
         if: ${{ !inputs.FAST_BUILD || steps.fast_build.outputs.fallback}}
@@ -1198,14 +1101,6 @@ jobs:
           rm -f Image
           mv oImage Image
           cp Image $GITHUB_WORKSPACE/AnyKernel3/Image
-          mkdir -p "$GITHUB_WORKSPACE/build-debug"
-          {
-            echo "KPM patched Image:"
-            ls -lh Image || true
-            file Image || true
-            sha256sum Image || true
-          } > "$GITHUB_WORKSPACE/build-debug/Image.kpm.info" 2>&1
-          strings Image | grep -E 'Linux version|SukiSU|KernelSU|susfs|KPM' > "$GITHUB_WORKSPACE/build-debug/Image.kpm.strings.filtered" || true
 
 
 
@@ -1214,13 +1109,6 @@ jobs:
         run: |
           echo "value=${{ inputs.LSM && '_LSM' || '' }}${{ inputs.SCHED && '_SCHED' || '' }}${{ inputs.KPM  && '_KPM' || '' }}" >> $GITHUB_OUTPUT
           echo "kpm=${{ ! inputs.KPM  && 'nkpm' || '' }}" >> $GITHUB_OUTPUT
-
-      - name: Upload Final Debug Artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: final-debug-${{ inputs.FILE }}-${{ env.TKERNEL_VERSION }}
-          path: build-debug/*
 
       - name: Upload AnyKernel3
         uses: actions/upload-artifact@v4
