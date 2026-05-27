@@ -6,6 +6,7 @@ on:
 
 jobs:
   vring-resukisu-snapdragon:
+    name: "${{ matrix.file }}"
     strategy:
       fail-fast: false
       matrix:

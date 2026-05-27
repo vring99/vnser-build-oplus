@@ -6,6 +6,7 @@ on:
 
 jobs:
   vring-resukisu-mtk:
+    name: "${{ matrix.file }}"
     strategy:
       fail-fast: false
       matrix:
