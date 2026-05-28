@@ -1039,7 +1039,8 @@ jobs:
           cd common
           SETUP_ENV_BRANCH="android16-6.12-2025-06"
           if curl -fsSL "https://raw.githubusercontent.com/cctv18/android_gki_kernel_common/refs/heads/${SETUP_ENV_BRANCH}/_setup_env.sh" -o ./_setup_env.sh; then
-            source "./_setup_env.sh" || true
+            #source "./_setup_env.sh" || true
+            echo "";
           else
             echo "未找到 ${SETUP_ENV_BRANCH}/_setup_env.sh，继续使用当前源码环境"
           fi
