@@ -1003,6 +1003,16 @@ jobs:
 
           CLANG_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$REPO_CLANG_PREBUILT_BIN"
           CLANG_LIB="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$(dirname "$REPO_CLANG_PREBUILT_BIN")/lib"
+          if [[ ! -x "$CLANG_BIN/clang" ]]; then
+            echo "::warning::build.config 指定的 clang 不存在或不可执行: $CLANG_BIN"
+            CLANG_BIN=$(find "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/clang/host/linux-x86" -maxdepth 3 -type f -path "*/clang-r*/bin/clang" -perm -111 2>/dev/null | sed 's#/clang$##' | sort -V | tail -n 1 || true)
+            if [[ -z "$CLANG_BIN" ]]; then
+              echo "::error::未找到可执行 clang"
+              exit 1
+            fi
+            CLANG_LIB="$(dirname "$CLANG_BIN")/lib"
+            echo "使用已检出的 clang: $CLANG_BIN"
+          fi
           RUST_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/rust/linux-x86/${{ env.RUSTC_VERSION }}/bin"
           BUILD_TOOLS_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/kernel-build-tools/linux-x86/bin"
           BINDGEN_DIR=""
