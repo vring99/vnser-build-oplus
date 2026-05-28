@@ -78,6 +78,13 @@ jobs:
             kpm: true
             sched: false
             ipv6: true
+
+          - file: oneplus_ace3_300_b
+            kpm: true
+            sched: false
+            ipv6: true
+
+
           - file: oneplus_ace_3v_v
             kpm: true
             sched: false
