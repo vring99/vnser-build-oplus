@@ -1040,9 +1040,9 @@ jobs:
           unset CLANG_PREBUILT_BIN CLANG_VERSION
 
           if [[ "${{ env.ENABLE_RUST }}" == "true" ]]; then
-            export PATH="$CLANG_BIN:$BUILD_TOOLS_BIN:$RUST_BIN${BINDGEN_DIR:+:$BINDGEN_DIR}:$PATH"
+            export PATH="$BUILD_TOOLS_BIN:$CLANG_BIN:$RUST_BIN${BINDGEN_DIR:+:$BINDGEN_DIR}:$PATH"
           else
-            export PATH="$CLANG_BIN:$BUILD_TOOLS_BIN${BINDGEN_DIR:+:$BINDGEN_DIR}:$PATH"
+            export PATH="$BUILD_TOOLS_BIN:$CLANG_BIN${BINDGEN_DIR:+:$BINDGEN_DIR}:$PATH"
           fi
           export LLVM=1 LLVM_IAS=1
           export ARCH=arm64 SUBARCH=arm64
