@@ -448,9 +448,6 @@ jobs:
           
             echo "Modifying: $path"
           
-            # Remove -dirty
-            sed -i 's/ -dirty//g' "$path"
-            sed -i '$i res=$(echo "$res" | sed '\''s/-dirty//g'\'')' "$path"
           
             if grep -q 'KERNELVERSION.*scm_version' "$path"; then
               echo "Detected NEW setlocalversion format"
@@ -477,8 +474,6 @@ jobs:
             chmod +x "$path"
           done
           
-          git add -A
-          git commit -m "Custom suffix & removed -dirty"
 
       # 伪官方格式的随机后缀（仅在 SUFFIX 未设置时生效）*
       - name: Custom Kernel Random Suffix if empty
@@ -512,9 +507,6 @@ jobs:
           
             echo "Modifying: $path"
           
-            # Remove -dirty
-            sed -i 's/ -dirty//g' "$path"
-            sed -i '$i res=$(echo "$res" | sed '\''s/-dirty//g'\'')' "$path"
           
             if grep -q 'KERNELVERSION.*scm_version' "$path"; then
               echo "Detected NEW setlocalversion format"
@@ -537,8 +529,6 @@ jobs:
             chmod +x "$path"
           done
           
-          git add -A
-          git commit -m "Random suffix & remove -dirty"
 
       - name: Add SukiSU Ultra
         run: |
