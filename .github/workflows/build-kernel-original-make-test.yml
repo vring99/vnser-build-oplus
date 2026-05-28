@@ -404,6 +404,23 @@ jobs:
             echo "ENABLE_RUST=false" >> $GITHUB_ENV
           fi
 
+      - name: Prepare CCTV Toolchain
+        run: |
+          cd kernel_workspace
+          rm -rf clang20 build-tools clang.zip build-tools.zip
+          mkdir -p clang20
+          curl -L --retry 5 --retry-delay 2 --retry-connrefused https://github.com/cctv18/oneplus_sm8650_toolchain/releases/download/LLVM-Clang20-r547379/clang-r547379.zip -o clang.zip
+          unzip -q clang.zip -d clang20
+          curl -L --retry 5 --retry-delay 2 --retry-connrefused https://github.com/cctv18/oneplus_sm8650_toolchain/releases/download/LLVM-Clang20-r547379/build-tools.zip -o build-tools.zip
+          unzip -q build-tools.zip
+          rm -f clang.zip build-tools.zip
+          test -x clang20/bin/clang
+          test -x clang20/bin/ld.lld
+          test -x build-tools/bin/pahole
+          echo "CCTV_CLANG_BIN=$GITHUB_WORKSPACE/kernel_workspace/clang20/bin" >> "$GITHUB_ENV"
+          echo "CCTV_CLANG_LIB=$GITHUB_WORKSPACE/kernel_workspace/clang20/lib" >> "$GITHUB_ENV"
+          echo "CCTV_BUILD_TOOLS_BIN=$GITHUB_WORKSPACE/kernel_workspace/build-tools/bin" >> "$GITHUB_ENV"
+
 
       # 自定义内核后缀
       - name: Custom Kernel Suffix if set
@@ -1001,20 +1018,18 @@ jobs:
             REPO_CLANG_PREBUILT_BIN=${REPO_CLANG_PREBUILT_BIN/\$\{CLANG_VERSION\}/$REPO_CLANG_VERSION}
           fi
 
-          CLANG_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$REPO_CLANG_PREBUILT_BIN"
-          CLANG_LIB="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$(dirname "$REPO_CLANG_PREBUILT_BIN")/lib"
-          if [[ ! -x "$CLANG_BIN/clang" ]]; then
-            echo "::warning::build.config 指定的 clang 不存在或不可执行: $CLANG_BIN"
-            CLANG_BIN=$(find "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/clang/host/linux-x86" -maxdepth 3 -type f -path "*/clang-r*/bin/clang" -perm -111 2>/dev/null | sed 's#/clang$##' | sort -V | tail -n 1 || true)
-            if [[ -z "$CLANG_BIN" ]]; then
-              echo "::error::未找到可执行 clang"
-              exit 1
-            fi
-            CLANG_LIB="$(dirname "$CLANG_BIN")/lib"
-            echo "使用已检出的 clang: $CLANG_BIN"
+          CLANG_BIN="${{ env.CCTV_CLANG_BIN }}"
+          CLANG_LIB="${{ env.CCTV_CLANG_LIB }}"
+          BUILD_TOOLS_BIN="${{ env.CCTV_BUILD_TOOLS_BIN }}"
+          if [[ ! -x "$CLANG_BIN/clang" || ! -x "$CLANG_BIN/ld.lld" ]]; then
+            echo "::error::cctv clang 工具链不存在或不可执行: $CLANG_BIN"
+            exit 1
+          fi
+          if [[ ! -x "$BUILD_TOOLS_BIN/pahole" ]]; then
+            echo "::error::cctv build-tools 不存在或不可执行: $BUILD_TOOLS_BIN"
+            exit 1
           fi
           RUST_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/rust/linux-x86/${{ env.RUSTC_VERSION }}/bin"
-          BUILD_TOOLS_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/kernel-build-tools/linux-x86/bin"
           BINDGEN_DIR=""
           BINDGEN_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/clang-tools/linux-x86/bin/bindgen"
           if [[ -x "$BINDGEN_BIN" ]]; then
@@ -1038,18 +1053,7 @@ jobs:
           export LLVM=1 LLVM_IAS=1
           export ARCH=arm64 SUBARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
-          export CC="clang"
-          export HOSTCC="clang"
-          export LD="ld.lld"
-          export HOSTLD="ld.lld"
-          export AR="llvm-ar"
-          export NM="llvm-nm"
-          export AS="clang"
-          export READELF="llvm-readelf"
-          export OBJCOPY="llvm-objcopy"
-          export OBJDUMP="llvm-objdump"
-          export OBJSIZE="llvm-size"
-          export STRIP="llvm-strip"
+          unset CC HOSTCC LD HOSTLD AR NM AS READELF OBJCOPY OBJDUMP OBJSIZE STRIP
           export PAHOLE="$BUILD_TOOLS_BIN/pahole"
           export CCACHE_BASEDIR="$GITHUB_WORKSPACE"
           export CCACHE_NOHASHDIR="true"
@@ -1062,7 +1066,7 @@ jobs:
           [ -x "$BINDGEN_BIN" ] && export BINDGEN="$BINDGEN_BIN"
           export LIBCLANG_PATH="$CLANG_LIB"
 
-          echo "========== Repo Toolchain Make Debug =========="
+          echo "========== CCTV Toolchain Make Debug =========="
           echo "FILE=${{ inputs.FILE }}"
           echo "CPU=${{ env.CPU }}"
           echo "CPUD=${{ env.CPUD }}"
@@ -1096,7 +1100,7 @@ jobs:
           [ -x "$BINDGEN_BIN" ] && bindgen --version || true
           "$PAHOLE" --version || true
           echo "LLVM=${LLVM} LLVM_IAS=${LLVM_IAS} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE}"
-          echo "CC=${CC} HOSTCC=${HOSTCC} LD=${LD} HOSTLD=${HOSTLD}"
+          echo "CC=${CC:-} HOSTCC=${HOSTCC:-} LD=${LD:-} HOSTLD=${HOSTLD:-}"
           echo "LIBCLANG_PATH=${LIBCLANG_PATH}"
           echo "================================================"
           if [[ "$KERNEL_VERSION" == "6.1" && "${{ env.CPU }}" == mt* ]]; then
@@ -1115,9 +1119,27 @@ jobs:
           COMMON_REAL_PATH=$(pwd -P)
           PLATFORM_REAL_PATH=$(dirname "$COMMON_REAL_PATH")
           ROOT_REAL_PATH=$(dirname "$PLATFORM_REAL_PATH")
+          curl -L --retry 5 --retry-delay 2 --retry-connrefused https://raw.githubusercontent.com/cctv18/oppo_oplus_realme_sm8650/main/lib/libfakestat.so -o libfakestat.so
+          curl -L --retry 5 --retry-delay 2 --retry-connrefused https://raw.githubusercontent.com/cctv18/oppo_oplus_realme_sm8650/main/lib/libfaketimeMT.so -o libfaketimeMT.so
+          chmod 777 ./libfakestat.so ./libfaketimeMT.so
+          export FAKESTAT="2025-05-25 12:00:00"
+          export FAKETIME="@2025-05-25 13:00:00"
+          SO_DIR=$(pwd)
+          export PRELOAD_LIBS="$SO_DIR/libfakestat.so $SO_DIR/libfaketimeMT.so"
+          echo '#!/bin/bash' > cc-wrapper
+          echo 'export LD_PRELOAD="'$PRELOAD_LIBS'"' >> cc-wrapper
+          echo 'export FAKESTAT="'$FAKESTAT'"' >> cc-wrapper
+          echo 'export FAKETIME="'$FAKETIME'"' >> cc-wrapper
+          echo 'ccache clang "$@"' >> cc-wrapper
+          echo '#!/bin/bash' > ld-wrapper
+          echo 'export LD_PRELOAD="'$PRELOAD_LIBS'"' >> ld-wrapper
+          echo 'export FAKESTAT="'$FAKESTAT'"' >> ld-wrapper
+          echo 'export FAKETIME="'$FAKETIME'"' >> ld-wrapper
+          echo 'ld.lld "$@"' >> ld-wrapper
+          chmod +x cc-wrapper ld-wrapper
           echo "========== Make Params Debug =========="
           echo "defconfig: CC=ccache clang LD=ld.lld HOSTLD=ld.lld KCFLAGS+=-O2 KCFLAGS+=-Wno-error"
-          echo "image:     CC=ccache clang LD=ld.lld HOSTLD=ld.lld KCFLAGS+=-O2 KCFLAGS+=-Wno-error"
+          echo "image:     CC=$(pwd)/cc-wrapper LD=$(pwd)/ld-wrapper HOSTLD=ld.lld KCFLAGS+=-O2 KCFLAGS+=-Wno-error"
           echo "======================================="
 
           make -j"$(nproc --all)" LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" LD="ld.lld" HOSTLD="ld.lld" O=out KCFLAGS+=-O2 KCFLAGS+=-Wno-error gki_defconfig
@@ -1125,7 +1147,7 @@ jobs:
           grep -E '^(CONFIG_LOCALVERSION|CONFIG_LTO_CLANG|CONFIG_LTO_CLANG_NONE|CONFIG_LTO_CLANG_THIN|CONFIG_MODULES|CONFIG_MODVERSIONS|CONFIG_RUST|CONFIG_KPM|CONFIG_KSU|CONFIG_KSU_SUSFS|CONFIG_CFG80211|CONFIG_WLAN)=' out/.config || true
           echo "====================================="
 
-          make -j"$(nproc --all)" LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" LD="ld.lld" HOSTLD="ld.lld" O=out KCFLAGS+=-O2 KCFLAGS+=-Wno-error Image
+          make -j"$(nproc --all)" LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="$(pwd)/cc-wrapper" LD="$(pwd)/ld-wrapper" HOSTLD="ld.lld" O=out KCFLAGS+=-O2 KCFLAGS+=-Wno-error Image
           if [[ "$KERNEL_VERSION" == "6.1" && "${{ env.CPU }}" == mt* ]]; then
             echo "========== MTK 6.1 Image Location Debug =========="
             find "$GITHUB_WORKSPACE/kernel_workspace" -path '*/out/*' -name Image -print -exec ls -lh {} \; 2>/dev/null || true
