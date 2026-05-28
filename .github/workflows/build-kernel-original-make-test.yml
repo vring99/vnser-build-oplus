@@ -404,20 +404,6 @@ jobs:
             echo "ENABLE_RUST=false" >> $GITHUB_ENV
           fi
 
-      - name: Prepare MTK 6.1 Test Toolchain
-        if: ${{ env.KERNEL_VERSION == '6.1' && startsWith(env.CPU, 'mt') }}
-        run: |
-          cd kernel_workspace
-          rm -rf clang20 build-tools clang.zip build-tools.zip
-          mkdir -p clang20
-          curl -L https://github.com/cctv18/oneplus_sm8650_toolchain/releases/download/LLVM-Clang20-r547379/clang-r547379.zip -o clang.zip
-          unzip -q clang.zip -d clang20
-          curl -L https://github.com/cctv18/oneplus_sm8650_toolchain/releases/download/LLVM-Clang20-r547379/build-tools.zip -o build-tools.zip
-          unzip -q build-tools.zip
-          rm -f clang.zip build-tools.zip
-          echo "MTK61_TEST_CLANG_BIN=$GITHUB_WORKSPACE/kernel_workspace/clang20/bin" >> "$GITHUB_ENV"
-          echo "MTK61_TEST_CLANG_LIB=$GITHUB_WORKSPACE/kernel_workspace/clang20/lib" >> "$GITHUB_ENV"
-          echo "MTK61_TEST_BUILD_TOOLS_BIN=$GITHUB_WORKSPACE/kernel_workspace/build-tools/bin" >> "$GITHUB_ENV"
 
       # 自定义内核后缀
       - name: Custom Kernel Suffix if set
@@ -1019,11 +1005,6 @@ jobs:
           CLANG_LIB="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$(dirname "$REPO_CLANG_PREBUILT_BIN")/lib"
           RUST_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/rust/linux-x86/${{ env.RUSTC_VERSION }}/bin"
           BUILD_TOOLS_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/kernel-build-tools/linux-x86/bin"
-          if [[ "$KERNEL_VERSION" == "6.1" && "${{ env.CPU }}" == mt* ]]; then
-            CLANG_BIN="${{ env.MTK61_TEST_CLANG_BIN }}"
-            CLANG_LIB="${{ env.MTK61_TEST_CLANG_LIB }}"
-            BUILD_TOOLS_BIN="${{ env.MTK61_TEST_BUILD_TOOLS_BIN }}"
-          fi
           BINDGEN_DIR=""
           BINDGEN_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/clang-tools/linux-x86/bin/bindgen"
           if [[ -x "$BINDGEN_BIN" ]]; then
