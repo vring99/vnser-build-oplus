@@ -69,6 +69,11 @@ on:
         description: "是否优化ipv6？"
         required: false
         default: true
+      DISABLE_ROOT_FEATURES:
+        type: boolean
+        description: "调试：关闭 KPM/BBG/UNICODE/SUSFS"
+        required: false
+        default: true
 jobs:
   load:
     name: ${{ inputs.SCHED  && ' [SCHED]' || '' }}${{ inputs.LSM  && ' [LSM]' || '' }}${{ inputs.KPM && ' [KPM]' || '' }}For ${{ inputs.FILE }} ${{ inputs.SUFFIX }}
@@ -518,7 +523,7 @@ jobs:
           
           echo "正在配置ReSukiSU..."
           curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/refs/heads/main/kernel/setup.sh" | bash -s main
-          echo 'CONFIG_KSU_FULL_NAME_FORMAT="%TAG_NAME%-%COMMIT_SHA%@vring"' >> ./common/arch/arm64/configs/gki_defconfig
+          echo 'CONFIG_KSU_FULL_NAME_FORMAT="%TAG_NAME%-%COMMIT_SHA%@cctv18"' >> ./common/arch/arm64/configs/gki_defconfig
           cd ./KernelSU
           # 生成自定义版本号（基于提交计数）, 失败时使用 114514
           KSU_VERSION=$(expr $(git rev-list --count main) + 30700 2>/dev/null || echo 114514)
@@ -526,205 +531,19 @@ jobs:
           echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
           echo "ksuver=$KSU_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Apply Patches SukiSU Ultra
+      - name: Apply KernelSU SUSFS Patches CCTV
+        if: ${{ !inputs.DISABLE_ROOT_FEATURES }}
         run: |
           cd kernel_workspace
-          
-          SUSFS_BRANCH="gki-${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}"
-          git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}
-          
-          cd susfs4ksu
-          if [ "$SUSFS_BRANCH" = "gki-android12-5.10" ]; then
-            git checkout 86114db0
-          
-           elif [ "$SUSFS_BRANCH" = "gki-android13-5.15" ]; then
-            git checkout e4bd49f7
-          elif [ "$SUSFS_BRANCH" = "gki-android14-6.1" ]; then
-            git checkout 9bf72ec2
-          elif [ "$SUSFS_BRANCH" = "gki-android15-6.6" ]; then
-            git checkout 2df41de7
-          elif [ "$SUSFS_BRANCH" = "gki-android16-6.12" ]; then
-            git checkout 75a61385
-          else
-            echo "No specific commit for this"
-            exit 500
-          fi
-          cd ../
-          
-          git clone https://github.com/ShirkNeko/SukiSU_patch.git
-          git clone https://github.com/Numbersf/Action-Build.git
+          echo "正在添加 cctv susfs4oki 补丁..."
+          git clone --depth=1 https://github.com/cctv18/susfs4oki.git susfs4ksu -b oki-${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}
           cd kernel_platform
-          echo "正在拉取susfs补丁"
           cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}.patch ./common/
           cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
           cp ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
-          
-          if [ "${{ inputs.ZRAM }}" = "true" ]; then
-            echo "正在拉取zram补丁"
-            cp -r ../SukiSU_patch/other/zram/lz4k/include/linux/* ./common/include/linux/
-            cp -r ../SukiSU_patch/other/zram/lz4k/lib/* ./common/lib/
-            cp -r ../SukiSU_patch/other/zram/lz4k/crypto/* ./common/crypto/
-            cp -r ../SukiSU_patch/other/zram/lz4k_oplus ./common/lib/
-          fi
-          
           cd ./common
-          GKI_V="${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}"
-          SUBLEVEL=$(grep '^SUBLEVEL *=' Makefile | head -n1 | cut -d= -f2 | tr -d ' ')
-          
-          if [ "$GKI_V" == "android13-5.15" ] && [ "$SUBLEVEL" -lt 123 ]; then
-            echo "修复内核版本为5.15.0~5.15.123仅支持旧版C库造成的一些bug"
-            cp ../../Action-Build/patches/fix_5.15.legacy ./fix_5.15.legacy.patch
-            patch -p1 < fix_5.15.legacy.patch
-            echo "fix_5.15_patch完成"
-          fi
-          KERNEL_VERSION="${{ env.KERNEL_VERSION }}"
-          TKERNEL_VERSION="${{ env.TKERNEL_VERSION }}"
-          file="${{ inputs.FILE }}"
-          TRUSTY_EXISTS="false"
-          if [[ "$KERNEL_VERSION" == "6.6" ]]; then
-            if grep -q 'common-modules/trusty' "$GITHUB_WORKSPACE/.repo/manifests_fallback/${file}.xml"; then
-              TRUSTY_EXISTS="true"
-            fi
-            echo "trusty_exists=$TRUSTY_EXISTS" >> $GITHUB_OUTPUT
-          
-            if [[ "$TRUSTY_EXISTS" == "false" && "$(printf '%s\n' "$TKERNEL_VERSION" "6.6.30" | sort -V | head -n1)" = "$TKERNEL_VERSION" ]]; then
-              echo "修复内核版本6.6部分机型缺失Trusty OS导致的susfs的报错"
-              sed -i 's/-32,12 +32,38/-32,11 +32,37/g' 50_add_susfs_in_gki-${{ env.KANDROID_VERSION }}-${KERNEL_VERSION}.patch
-              sed -i '/#include <trace\/hooks\/fs.h>/d' 50_add_susfs_in_gki-${{ env.KANDROID_VERSION }}-${KERNEL_VERSION}.patch
-            fi
-          fi
-          # Fake Patch to fix failures
-          fake_patched=0
-          if [ "$GKI_V" = "android15-6.6" ]; then
-            if ! grep -qxF $'\tunsigned int nr_subpages = __PAGE_SIZE / PAGE_SIZE;' ./fs/proc/task_mmu.c; then
-              echo "未找到 nr_subpages,正在进行补丁修复"
-              sed -i -e '/int ret = 0, copied = 0;/a \\tunsigned int nr_subpages \= __PAGE_SIZE \/ PAGE_SIZE;' -e '/int ret = 0, copied = 0;/a \\tpagemap_entry_t \*res = NULL;' ./fs/proc/task_mmu.c
-              fake_patched=1
-            fi
-          fi
-          if [ "$GKI_V" = "android12-5.10" ] || [ "$GKI_V" = "android13-5.15" ]; then
-            if ! grep -qxF $'\tif (!vma_pages(vma))' ./fs/proc/task_mmu.c; then
-              echo "未找到 vma_pages,正在进行补丁修复"
-              fake_patched=1
-            fi
-          fi
-          
-          echo "正在打susfs补丁"
           patch -p1 < 50_add_susfs_in_gki-${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}.patch || true
-          echo "susfs_patch完成"
-          
-          # Revert
-          if [ "$fake_patched" = 1 ]; then
-            if [ "$GKI_V" = "android15-6.6" ]; then
-              if grep -qxF $'\tunsigned int nr_subpages = __PAGE_SIZE / PAGE_SIZE;' ./fs/proc/task_mmu.c; then
-                sed -i -e '/unsigned int nr_subpages \= __PAGE_SIZE \/ PAGE_SIZE;/d' -e '/pagemap_entry_t \*res = NULL;/d' ./fs/proc/task_mmu.c
-              fi
-            fi
-            if [ "$GKI_V" = "android12-5.10" ] || [ "$GKI_V" = "android13-5.15" ]; then
-              if grep -qxF $'\t\tgoto show_pad;' ./fs/proc/task_mmu.c; then
-                sed -i -e 's/goto show_pad;/return 0;/' ./fs/proc/task_mmu.c
-              fi
-            fi
-          fi
-          
-          CURRENT_SUB="$SUBLEVEL"
-          if [[ ! "$CURRENT_SUB" =~ ^[0-9]+$ ]]; then
-            CURRENT_SUB=99999
-          fi
-          echo "应用 SUSFS 补丁..."
-          SUSFS_VERSION="2.1.0"
-          KERNEL_PATCHES=$GITHUB_WORKSPACE/kernel_patches
-          git clone https://github.com/WildKernels/kernel_patches.git "$KERNEL_PATCHES"
-          
-          if [[ "$GKI_V" == "android12-5.10" ]]; then
-              if [[ "$CURRENT_SUB" -le 209 ]]; then
-                sed -i -e 's/goto show_pad;/return 0;/' ./fs/proc/task_mmu.c
-              fi
-              if [[ "$CURRENT_SUB" -le 117 ]]; then
-                cp $KERNEL_PATCHES/wild/archived/susfs_fix_patches/v${SUSFS_VERSION}/a12-5.10/fdinfo.c.patch ./
-                patch -p1 < fdinfo.c.patch || true
-              fi
-              if [[ "$CURRENT_SUB" -le 43 ]]; then
-                cp $KERNEL_PATCHES/wild/archived/susfs_fix_patches/v${SUSFS_VERSION}/a12-5.10/base.c.patch ./
-                patch -p1 < base.c.patch || true
-              fi
-          fi
-          if [[ "$GKI_V" == "android13-5.15" ]]; then 
-            #if [[ "$CURRENT_SUB" -gt 167 ]]; then
-              # memory.c
-          
-              echo "===== 检查 ====="
-              grep -n "SUSFS_IS_INODE_SUS_MAP" mm/memory.c
-              grep -R "define SUSFS_IS_INODE_SUS_MAP" -n include fs mm kernel 2>/dev/null
-              grep -n "susfs_def.h" mm/memory.c || echo "memory.c 缺少 susfs_def.h"
-          
-              echo "===== 修复 ====="
-             if grep -q "SUSFS_IS_INODE_SUS_MAP" mm/memory.c && ! grep -q "susfs_def.h" mm/memory.c; then
-                  sed -i '/#include <linux\/vmalloc.h>/a \
-                  #ifdef CONFIG_KSU_SUSFS_SUS_MAP\n#include <linux/susfs_def.h>\n#endif' mm/memory.c
-              fi
-          
-              echo "===== 验证 ====="
-              grep -n "susfs_def.h\|SUSFS_IS_INODE_SUS_MAP" mm/memory.c
-          
-          
-            #fi
-          fi
-          
-          
-          # Android 14 - 6.1 修复
-          if [[ "$GKI_V" == "android14-6.1" ]]; then
-            if [[ "$CURRENT_SUB" -le 141 || "$CURRENT_SUB" -ge 145 ]]; then
-              cp $KERNEL_PATCHES/wild/archived/susfs_fix_patches/v${SUSFS_VERSION}/a14-6.1/base.c.patch ./
-              patch -p1 < base.c.patch || true
-            fi
-            if ! grep -qF '#include <linux/dma-buf.h>' ./fs/proc/base.c; then
-              sed -i '/#include <linux\/cpufreq_times.h>/a #include <linux\/dma-buf.h>' ./fs/proc/base.c
-            fi
-            if grep -q 'susfs_is_current_proc_umounted' ./fs/proc/base.c && ! grep -qF '#include <linux/susfs.h>' ./fs/proc/base.c; then
-              sed -i '/#include <linux\/dma-buf.h>/a #include <linux\/susfs.h>' ./fs/proc/base.c
-            fi
-            if [[ "$CURRENT_SUB" -le 128 ]]; then
-              sed -i -e 's/goto show_pad;/return 0;/' ./fs/proc/task_mmu.c
-            fi
-          fi
-          
-          # Android 15 - 6.6 修复
-          if [[ "$GKI_V" == "android15-6.6" ]]; then
-            if [[ "$CURRENT_SUB" -ge 98 ]]; then
-              cp $KERNEL_PATCHES/wild/archived/susfs_fix_patches/v${SUSFS_VERSION}/a15-6.6/base.c.patch ./
-              patch -p1 < base.c.patch || true
-            fi
-            # 修复 6.6.50~6.6.97: 缺少 susfs_def.h 导致编译报 undeclared identifier
-            if grep -q 'AS_FLAGS_SUS_MAP\|susfs_is_current_proc_umounted' ./fs/proc/base.c && ! grep -qF 'susfs_def.h' ./fs/proc/base.c; then
-              if ! grep -qF '#include <linux/dma-buf.h>' ./fs/proc/base.c; then
-                sed -i '/#include <linux\/cpufreq_times.h>/a #include <linux\/dma-buf.h>' ./fs/proc/base.c
-              fi
-              sed -i '/#include <linux\/dma-buf.h>/a #endif' ./fs/proc/base.c
-              sed -i '/#include <linux\/dma-buf.h>/a #include <linux\/susfs_def.h>' ./fs/proc/base.c
-              sed -i '/#include <linux\/dma-buf.h>/a #ifdef CONFIG_KSU_SUSFS_SUS_MAP' ./fs/proc/base.c
-            fi
-            # 修复 ReSukiSU: 缺少 susfs.h 导致编译报 undeclared identifier
-            if grep -q 'SUSFS_IS_INODE_SUS_MAP\|SUSFS_IS_INODE_OPEN_REDIRECT' ./fs/proc/base.c && ! grep -qF '#include <linux/susfs.h>' ./fs/proc/base.c; then
-              if ! grep -qF '#include <linux/dma-buf.h>' ./fs/proc/base.c; then
-                sed -i '/#include <linux\/cpufreq_times.h>/a #include <linux\/dma-buf.h>' ./fs/proc/base.c
-              fi
-              sed -i '/#include <linux\/dma-buf.h>/a #include <linux\/susfs.h>' ./fs/proc/base.c
-            fi
-          
-          
-          
-            if [[ "$CURRENT_SUB" -le 58 ]]; then
-              # memory.c
-              sed -i '/#include <linux\/sched\/sysctl.h>/a \
-              #ifdef CONFIG_KSU_SUSFS_SUS_MAP\n#include <linux/susfs_def.h>\n#endif' mm/memory.c
-              # fs/proc/base.c
-              sed -i '/#include <linux\/dma-buf.h>/a \
-              #if defined(CONFIG_KSU_SUSFS_SUS_MAP) || defined(CONFIG_KSU_SUSFS_OPEN_REDIRECT)\n#include <linux/susfs_def.h>\n#endif' fs/proc/base.c
-          
-            fi
-          fi
-
+          echo "cctv susfs_patch完成"
       # OGKI转换GKI，无需修改 dtbo 开机
       - name: Apply Convert HMBIRD_OGKI to HMBIRD_GKI
         if: ${{ fromJSON(env.KV1) >= 6 && fromJSON(env.KV2) >= 66 && github.event.inputs.SCHED == 'false' }}
@@ -788,6 +607,7 @@ jobs:
           fi
 
       - name: Apply UNICODE_BYPASS and MEMORY_OPT
+        if: ${{ !inputs.DISABLE_ROOT_FEATURES }}
         run: |
           PATCH_DIR="${GITHUB_WORKSPACE}/kernel_workspace/Action-Build/patches"
           cd kernel_workspace/kernel_platform/common
@@ -805,11 +625,11 @@ jobs:
       #    patch -p1 -N -F 3 < 70_selinux_hide_policy_query.patch || true
 
       - name: Apply LSM_BBG
-        if: ${{ inputs.LSM }}
+        if: ${{ inputs.LSM && !inputs.DISABLE_ROOT_FEATURES }}
         run: |
           cd kernel_workspace/kernel_platform/common
           echo "正在启用内核级基带保护支持…"
-          curl -LSs https://raw.githubusercontent.com/vc-teahouse/Baseband-guard/main/setup.sh | bash
+          curl -sSL https://github.com/cctv18/Baseband-guard/raw/master/setup.sh | bash
           sed -i '/^config LSM$/,/^help$/{ /^[[:space:]]*default/ { /baseband_guard/! s/selinux/selinux,baseband_guard/ } }' ./security/Kconfig
 
       # 配置信息,带*为附加项目,具有一定危险性和不确定性
@@ -823,14 +643,22 @@ jobs:
           echo "CONFIG_KSU=y" >> "$CONFIG_FILE"
           
           # KPM配置
-          echo "CONFIG_KPM=y" >> "$CONFIG_FILE"
+          if [ "${{ inputs.DISABLE_ROOT_FEATURES }}" != "true" ]; then
+            echo "CONFIG_KPM=y" >> "$CONFIG_FILE"
+          fi
           
           # HOOK配置
           
           
           # SUSFS配置
-          cat >> "$CONFIG_FILE" << 'EOF'
+          if [ "${{ inputs.DISABLE_ROOT_FEATURES }}" != "true" ]; then
+            cat >> "$CONFIG_FILE" << 'EOF'
           CONFIG_KSU_SUSFS=y
+          CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y
+          CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y
+          CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y
+          CONFIG_KSU_SUSFS_TRY_UMOUNT=y
+          CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y
           CONFIG_KSU_SUSFS_SUS_PATH=y
           CONFIG_KSU_SUSFS_SUS_MOUNT=y
           CONFIG_KSU_SUSFS_SUS_KSTAT=y
@@ -841,24 +669,12 @@ jobs:
           CONFIG_KSU_SUSFS_OPEN_REDIRECT=y
           CONFIG_KSU_SUSFS_SUS_MAP=y
           EOF
+          fi
 
           # TMPFS配置*
           echo "CONFIG_TMPFS_XATTR=y" >> "$CONFIG_FILE"
           echo "CONFIG_TMPFS_POSIX_ACL=y" >> "$CONFIG_FILE"
           
-          # BBR配置*
-          echo "CONFIG_TCP_CONG_ADVANCED=y" >> "$CONFIG_FILE" 
-          echo "CONFIG_TCP_CONG_BBR=y" >> "$CONFIG_FILE"
-          echo "CONFIG_NET_SCH_FQ=y" >> "$CONFIG_FILE"
-          echo "CONFIG_TCP_CONG_BIC=n" >> "$CONFIG_FILE"
-          echo "CONFIG_TCP_CONG_WESTWOOD=n" >> "$CONFIG_FILE"
-          echo "CONFIG_TCP_CONG_HTCP=n" >> "$CONFIG_FILE"
-          
-          # ECN配置*
-          echo "CONFIG_IP_ECN=y" >> "$CONFIG_FILE"
-          echo "CONFIG_TCP_ECN=y" >> "$CONFIG_FILE"
-          echo "CONFIG_IPV6_ECN=y" >> "$CONFIG_FILE"
-          echo "CONFIG_IP_NF_TARGET_ECN=y" >> "$CONFIG_FILE"
           
           # ZRAM配置*
           if [ "${{ inputs.ZRAM }}" = "true" ]; then
@@ -871,7 +687,7 @@ jobs:
           fi
           
           # LSM配置*
-          if [ "${{ inputs.LSM }}" = "true" ]; then
+          if [ "${{ inputs.LSM }}" = "true" ] && [ "${{ inputs.DISABLE_ROOT_FEATURES }}" != "true" ]; then
             echo "CONFIG_BBG=y" >> "$CONFIG_FILE"
           fi
           IPV6="${{ inputs.IPV6 }}"
@@ -1136,7 +952,7 @@ jobs:
       - name: Make AnyKernel3
         run: |
           #git clone https://github.com/Numbersf/AnyKernel3 --depth=1
-          git clone https://github.com/WildPlusKernel/AnyKernel3.git -b "gki-2.0"
+          git clone https://github.com/cctv18/AnyKernel3 --depth=1
           rm -rf ./AnyKernel3/.git
           mkdir -p kernel_workspace/kernel_platform/out/Final-Image-Find/
           dir1=""
@@ -1179,16 +995,16 @@ jobs:
 
 
       - name: Apply patch_linux and replace Image
-        if: ${{ inputs.KPM }}
+        if: ${{ inputs.KPM && !inputs.DISABLE_ROOT_FEATURES }}
         run: |
-          cd kernel_workspace/kernel_platform/out/Final-Image-Find
-          #curl -LO --retry 5 --retry-delay 2 --retry-connrefused https://raw.githubusercontent.com/Numbersf/Action-Build/SukiSU-Ultra/patches/patch_linux
+          cd kernel_workspace/kernel_platform/common/out/arch/arm64/boot
           curl -LO --retry 5 --retry-delay 2 --retry-connrefused https://github.com/SukiSU-Ultra/SukiSU_KernelPatch_patch/releases/latest/download/patch_linux
           chmod +x patch_linux
           ./patch_linux
           rm -f Image
           mv oImage Image
           cp Image $GITHUB_WORKSPACE/AnyKernel3/Image
+          cp Image $GITHUB_WORKSPACE/kernel_workspace/kernel_platform/out/Final-Image-Find/Image
 
 
 
