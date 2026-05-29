@@ -302,42 +302,24 @@ jobs:
           fi
           ccache -s
 
-      - name: Install Repo Tool
-        run: |
-          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/repo
-          chmod a+x ~/repo
-          sudo mv ~/repo /usr/local/bin/repo
 
-      - name: Initialize Repo and Sync
+      - name: Initialize CCTV Ace5 Race Source
         env:
           FILE: ${{ inputs.FILE }}
         run: |
           mkdir kernel_workspace && cd kernel_workspace
-          mkdir -p .repo/manifests
-          cp "$GITHUB_WORKSPACE/.repo/manifests_fallback/${FILE}.xml" ".repo/manifests/${FILE}.xml"
-          BASE_URL="https://github.com/${MANIFEST_REPO}/${MANIFEST_REPO_NAME}.git"
-          
-          echo "使用$MANIFEST_REPO/$MANIFEST_REPO_NAME($MANIFEST_BRANCH)初始化仓库..."
-          repo init -u "$BASE_URL" -b "$MANIFEST_BRANCH" -m "${FILE}.xml" --depth=1 --no-clone-bundle --no-tags
-          repo sync -c -j$(nproc) --no-clone-bundle --no-tags --force-sync
-          
-          KERNEL_REPOS=""
-          KERNEL_REPOS_PATH=$(find . -type f -name "build.config.msm.common" | head -n 1)
-          if [[ -n "$KERNEL_REPOS_PATH" ]]; then
-            KERNEL_REPOS=$(echo "${KERNEL_REPOS_PATH#./}" | cut -d/ -f2)
-            echo "✅ 发现 build.config.msm.common: $KERNEL_REPOS_PATH"
-            echo "✅ KERNEL_REPOS=$KERNEL_REPOS"
-            echo "KERNEL_REPOS=$KERNEL_REPOS" >> "$GITHUB_ENV"
-          else
-            echo "❎ 未找到 build.config.msm.common，可能是天玑清单或纯 Kleaf 构建结构"
-          fi
-          
-          for dir in kernel_platform/common kernel_platform/$KERNEL_REPOS; do
-            if [ -e "$dir/BUILD.bazel" ]; then
-              sed -i '/^[[:space:]]*"protected_exports_list"[[:space:]]*:[[:space:]]*"android\/abi_gki_protected_exports_aarch64",$/d' "$dir/BUILD.bazel"
-            fi
-            rm -f "$dir/android/abi_gki_protected_exports_"* 2>/dev/null || echo "No protected exports in $dir"
-          done
+          echo "固定使用 cctv18/android_kernel_oneplus_mt6989 ace5_race 源码"
+          curl -L --retry 5 --retry-delay 2 --retry-connrefused https://github.com/cctv18/android_kernel_oneplus_mt6989/archive/refs/heads/oneplus/mt6989_b_16.0.0_ace5_race.zip -o common.zip
+          unzip -q common.zip
+          rm -f common.zip
+          mv android_kernel_oneplus_mt6989-oneplus-mt6989_b_16.0.0_ace5_race common
+          mkdir -p kernel_platform
+          ln -s ../common kernel_platform/common
+          echo "KERNEL_REPOS=" >> "$GITHUB_ENV"
+          echo "源码结构调试:"
+          ls -ld common kernel_platform kernel_platform/common
+          test -f common/Makefile
+          test -f kernel_platform/common/Makefile
 
       - name: Kernel Version Handling
         run: |
@@ -448,9 +430,6 @@ jobs:
           
             echo "Modifying: $path"
           
-            # Remove -dirty
-            sed -i 's/ -dirty//g' "$path"
-            sed -i '$i res=$(echo "$res" | sed '\''s/-dirty//g'\'')' "$path"
           
             if grep -q 'KERNELVERSION.*scm_version' "$path"; then
               echo "Detected NEW setlocalversion format"
@@ -1030,13 +1009,6 @@ jobs:
           fi
 
           cd common
-          SETUP_ENV_BRANCH="android16-6.12-2025-06"
-          if curl -fsSL "https://raw.githubusercontent.com/cctv18/android_gki_kernel_common/refs/heads/${SETUP_ENV_BRANCH}/_setup_env.sh" -o ./_setup_env.sh; then
-            #source "./_setup_env.sh" || true
-            echo "";
-          else
-            echo "未找到 ${SETUP_ENV_BRANCH}/_setup_env.sh，继续使用当前源码环境"
-          fi
           unset CLANG_PREBUILT_BIN CLANG_VERSION
 
           if [[ "${{ env.ENABLE_RUST }}" == "true" ]]; then
@@ -1069,7 +1041,6 @@ jobs:
           echo "KERNEL_VERSION=${KERNEL_VERSION}"
           echo "TKERNEL_VERSION=${{ env.TKERNEL_VERSION }}"
           echo "RUSTC_VERSION=${{ env.RUSTC_VERSION }}"
-          echo "SETUP_ENV_BRANCH=${SETUP_ENV_BRANCH}"
           echo "REPO_CLANG_PREBUILT_BIN=${REPO_CLANG_PREBUILT_BIN}"
           echo "REPO_CLANG_VERSION=${REPO_CLANG_VERSION}"
           echo "ENV_CLANG_PREBUILT_BIN=${CLANG_PREBUILT_BIN:-}"
