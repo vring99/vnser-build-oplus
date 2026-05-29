@@ -71,7 +71,7 @@ on:
         default: true
       DISABLE_ROOT_FEATURES:
         type: boolean
-        description: "调试：关闭 KPM/BBG/UNICODE/SUSFS"
+        description: "调试：关闭 KSU/KPM/BBG/UNICODE/SUSFS"
         required: false
         default: true
 jobs:
@@ -518,6 +518,7 @@ jobs:
           
 
       - name: Add SukiSU Ultra
+        if: ${{ !inputs.DISABLE_ROOT_FEATURES }}
         run: |
           cd kernel_workspace/kernel_platform
           
@@ -640,7 +641,9 @@ jobs:
           KERNEL_VERSION="${{ env.KERNEL_VERSION }}"
           
           # SukiSU Ultra配置
-          echo "CONFIG_KSU=y" >> "$CONFIG_FILE"
+          if [ "${{ inputs.DISABLE_ROOT_FEATURES }}" != "true" ]; then
+            echo "CONFIG_KSU=y" >> "$CONFIG_FILE"
+          fi
           
           # KPM配置
           if [ "${{ inputs.DISABLE_ROOT_FEATURES }}" != "true" ]; then
@@ -777,129 +780,41 @@ jobs:
           echo "Disabling GPUEB for MTK kernel 5.10"
           sed -i '/obj-y.*gpueb/d' kernel_workspace/kernel-5.10/drivers/gpu/mediatek/Makefile
 
-      - name: Build Kernel Repo Toolchain Make
+      - name: Build Kernel CCTV Make
         if: ${{ inputs.FAST_BUILD }}
         id: fast_build
         run: |
-          KERNEL_VERSION="${{ env.KERNEL_VERSION }}"
-          KANDROID_VERSION="${{ env.KANDROID_VERSION }}"
-
-          cd kernel_workspace/kernel_platform
-
-          REPO_CLANG_PREBUILT_BIN=""
-          for f in ./common/build.config.common ./"$KERNEL_REPOS"/build.config.common; do
-            [[ -f "$f" ]] || continue
-            REPO_CLANG_PREBUILT_BIN=$(grep '^CLANG_PREBUILT_BIN=' "$f" | cut -d'=' -f2)
-            [[ -n "$REPO_CLANG_PREBUILT_BIN" ]] && break
-          done
-          if [[ -z "$REPO_CLANG_PREBUILT_BIN" ]]; then
-            echo "::error::CLANG_PREBUILT_BIN 未在 build.config.common 中找到"
-            exit 1
-          fi
-
-          if [[ "$REPO_CLANG_PREBUILT_BIN" =~ (clang-r[0-9a-z]+) ]]; then
-            REPO_CLANG_VERSION="${BASH_REMATCH[1]}"
-          elif [[ -f ./common/build.config.constants ]]; then
-            REPO_CLANG_VERSION=$(grep '^CLANG_VERSION=' ./common/build.config.constants | cut -d'=' -f2 || true)
-          fi
-          if [[ -n "$REPO_CLANG_VERSION" ]]; then
-            REPO_CLANG_PREBUILT_BIN=${REPO_CLANG_PREBUILT_BIN/\$\{CLANG_VERSION\}/$REPO_CLANG_VERSION}
-          fi
-
-          CLANG_BIN="${{ env.CCTV_CLANG_BIN }}"
-          CLANG_LIB="${{ env.CCTV_CLANG_LIB }}"
-          BUILD_TOOLS_BIN="${{ env.CCTV_BUILD_TOOLS_BIN }}"
-          if [[ ! -x "$CLANG_BIN/clang" || ! -x "$CLANG_BIN/ld.lld" ]]; then
-            echo "::error::cctv clang 工具链不存在或不可执行: $CLANG_BIN"
-            exit 1
-          fi
-          if [[ ! -x "$BUILD_TOOLS_BIN/pahole" ]]; then
-            echo "::error::cctv build-tools 不存在或不可执行: $BUILD_TOOLS_BIN"
-            exit 1
-          fi
-          RUST_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/rust/linux-x86/${{ env.RUSTC_VERSION }}/bin"
-          BINDGEN_DIR=""
-          BINDGEN_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/clang-tools/linux-x86/bin/bindgen"
-          if [[ -x "$BINDGEN_BIN" ]]; then
-            BINDGEN_DIR=$(dirname "$BINDGEN_BIN")
-          fi
-
-          cd common
-          unset CLANG_PREBUILT_BIN CLANG_VERSION
-
-          if [[ "${{ env.ENABLE_RUST }}" == "true" ]]; then
-            export PATH="$BUILD_TOOLS_BIN:$CLANG_BIN:$RUST_BIN${BINDGEN_DIR:+:$BINDGEN_DIR}:$PATH"
-          else
-            export PATH="$BUILD_TOOLS_BIN:$CLANG_BIN${BINDGEN_DIR:+:$BINDGEN_DIR}:$PATH"
-          fi
-          export LLVM=1 LLVM_IAS=1
-          export ARCH=arm64 SUBARCH=arm64
-          export CROSS_COMPILE=aarch64-linux-gnu-
-          unset CC HOSTCC LD HOSTLD AR NM AS READELF OBJCOPY OBJDUMP OBJSIZE STRIP
-          export PAHOLE="$BUILD_TOOLS_BIN/pahole"
+          WORKDIR="$GITHUB_WORKSPACE"
+          export PATH="$GITHUB_WORKSPACE/kernel_workspace/build-tools/bin:$GITHUB_WORKSPACE/kernel_workspace/clang20/bin:/usr/lib/ccache:$PATH"
+          export CCACHE_LOGFILE="$GITHUB_WORKSPACE/kernel_workspace/ccache.log"
+          export CCACHE_COMPILERCHECK="none"
           export CCACHE_BASEDIR="$GITHUB_WORKSPACE"
           export CCACHE_NOHASHDIR="true"
           export CCACHE_NOHARDLINK="true"
-          export CCACHE_COMPILERCHECK="none"
+          export CCACHE_DIR="${{ env.CCACHE_DIR }}"
+          export CCACHE_MAXSIZE="3G"
+          export CCACHE_IS_KERNEL_COMPILING="true"
+          echo "sloppiness = file_stat_matches,include_file_ctime,include_file_mtime,pch_defines,file_macro,time_macros" >> "$CCACHE_DIR/ccache.conf"
 
-          if [[ "${{ env.ENABLE_RUST }}" == "true" ]]; then
-            export RUSTC="rustc"
-          fi
-          [ -x "$BINDGEN_BIN" ] && export BINDGEN="$BINDGEN_BIN"
-          export LIBCLANG_PATH="$CLANG_LIB"
-
+          cd kernel_workspace/common
           echo "========== CCTV Toolchain Make Debug =========="
           echo "FILE=${{ inputs.FILE }}"
           echo "CPU=${{ env.CPU }}"
           echo "CPUD=${{ env.CPUD }}"
           echo "BUILD_METHOD=${{ env.BUILD_METHOD }}"
-          echo "KANDROID_VERSION=${KANDROID_VERSION}"
-          echo "KERNEL_VERSION=${KERNEL_VERSION}"
+          echo "KANDROID_VERSION=${{ env.KANDROID_VERSION }}"
+          echo "KERNEL_VERSION=${{ env.KERNEL_VERSION }}"
           echo "TKERNEL_VERSION=${{ env.TKERNEL_VERSION }}"
-          echo "RUSTC_VERSION=${{ env.RUSTC_VERSION }}"
-          echo "REPO_CLANG_PREBUILT_BIN=${REPO_CLANG_PREBUILT_BIN}"
-          echo "REPO_CLANG_VERSION=${REPO_CLANG_VERSION}"
-          echo "ENV_CLANG_PREBUILT_BIN=${CLANG_PREBUILT_BIN:-}"
-          echo "CLANG_BIN=${CLANG_BIN}"
-          echo "CLANG_LIB=${CLANG_LIB}"
-          echo "RUST_BIN=${RUST_BIN}"
-          echo "BUILD_TOOLS_BIN=${BUILD_TOOLS_BIN}"
-          echo "BINDGEN_BIN=${BINDGEN_BIN}"
-          echo "PATH_HEAD=$(echo "$PATH" | tr ':' '\n' | head -n 10 | paste -sd ':' -)"
+          echo "WORKDIR=$WORKDIR"
+          echo "PATH_HEAD=$(echo "$PATH" | tr ':' '\n' | head -n 8 | paste -sd: -)"
           echo "which clang=$(command -v clang || true)"
           echo "which ld.lld=$(command -v ld.lld || true)"
-          if [[ "${{ env.ENABLE_RUST }}" == "true" ]]; then
-            echo "which rustc=$(command -v rustc || true)"
-          fi
-          echo "which bindgen=$(command -v bindgen || true)"
-          echo "BINDGEN=${BINDGEN:-}"
-          echo "PAHOLE=${PAHOLE}"
+          echo "which pahole=$(command -v pahole || true)"
           clang --version | head -n 2 || true
-          if [[ "${{ env.ENABLE_RUST }}" == "true" ]]; then
-            rustc --version || true
-          fi
-          [ -x "$BINDGEN_BIN" ] && bindgen --version || true
-          "$PAHOLE" --version || true
-          echo "LLVM=${LLVM} LLVM_IAS=${LLVM_IAS} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE}"
-          echo "CC=${CC:-} HOSTCC=${HOSTCC:-} LD=${LD:-} HOSTLD=${HOSTLD:-}"
-          echo "LIBCLANG_PATH=${LIBCLANG_PATH}"
-          echo "================================================"
-          if [[ "$KERNEL_VERSION" == "6.1" && "${{ env.CPU }}" == mt* ]]; then
-            echo "========== MTK 6.1 Test Debug =========="
-            echo "PWD=$(pwd)"
-            echo "KERNEL_REPOS=${KERNEL_REPOS:-}"
-            echo "Kernel Makefile candidates:"
-            find "$GITHUB_WORKSPACE/kernel_workspace" -maxdepth 3 -name Makefile -path '*/kernel*/*' -print 2>/dev/null || true
-            echo "build.config candidates:"
-            find "$GITHUB_WORKSPACE/kernel_workspace" -maxdepth 4 -name 'build.config*' -print 2>/dev/null || true
-            echo "clang prebuilts:"
-            find "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/clang/host/linux-x86" -maxdepth 2 -type d -name 'clang-*' -print 2>/dev/null || true
-            echo "========================================"
-          fi
+          ld.lld --version | head -n 1 || true
+          pahole --version 2>/dev/null | head -n 1 || true
+          echo "=============================================="
 
-          COMMON_REAL_PATH=$(pwd -P)
-          PLATFORM_REAL_PATH=$(dirname "$COMMON_REAL_PATH")
-          ROOT_REAL_PATH=$(dirname "$PLATFORM_REAL_PATH")
           curl -L --retry 5 --retry-delay 2 --retry-connrefused https://raw.githubusercontent.com/cctv18/oppo_oplus_realme_sm8650/main/lib/libfakestat.so -o libfakestat.so
           curl -L --retry 5 --retry-delay 2 --retry-connrefused https://raw.githubusercontent.com/cctv18/oppo_oplus_realme_sm8650/main/lib/libfaketimeMT.so -o libfaketimeMT.so
           chmod 777 ./libfakestat.so ./libfaketimeMT.so
@@ -918,31 +833,24 @@ jobs:
           echo 'export FAKETIME="'$FAKETIME'"' >> ld-wrapper
           echo 'ld.lld "$@"' >> ld-wrapper
           chmod +x cc-wrapper ld-wrapper
+
           echo "========== Make Params Debug =========="
           echo "defconfig: CC=ccache clang LD=ld.lld HOSTLD=ld.lld KCFLAGS+=-O2 KCFLAGS+=-Wno-error"
           echo "image:     CC=$(pwd)/cc-wrapper LD=$(pwd)/ld-wrapper HOSTLD=ld.lld KCFLAGS+=-O2 KCFLAGS+=-Wno-error"
           echo "======================================="
-
-          make -j"$(nproc --all)" LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" LD="ld.lld" HOSTLD="ld.lld" O=out KCFLAGS+=-O2 KCFLAGS+=-Wno-error gki_defconfig
+          make -j$(nproc --all) LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" LD="ld.lld" HOSTLD=ld.lld O=out KCFLAGS+=-O2 KCFLAGS+=-Wno-error gki_defconfig
           echo "========== Defconfig Debug =========="
           grep -E '^(CONFIG_LOCALVERSION|CONFIG_LTO_CLANG|CONFIG_LTO_CLANG_NONE|CONFIG_LTO_CLANG_THIN|CONFIG_MODULES|CONFIG_MODVERSIONS|CONFIG_RUST|CONFIG_KPM|CONFIG_KSU|CONFIG_KSU_SUSFS|CONFIG_CFG80211|CONFIG_WLAN)=' out/.config || true
           echo "====================================="
-
-          make -j"$(nproc --all)" LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="$(pwd)/cc-wrapper" LD="$(pwd)/ld-wrapper" HOSTLD="ld.lld" O=out KCFLAGS+=-O2 KCFLAGS+=-Wno-error Image
-          if [[ "$KERNEL_VERSION" == "6.1" && "${{ env.CPU }}" == mt* ]]; then
-            echo "========== MTK 6.1 Image Location Debug =========="
-            find "$GITHUB_WORKSPACE/kernel_workspace" -path '*/out/*' -name Image -print -exec ls -lh {} \; 2>/dev/null || true
-            echo "=================================================="
-          fi
+          make -j$(nproc --all) LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="$(pwd)/cc-wrapper" LD="$(pwd)/ld-wrapper" HOSTLD=ld.lld O=out KCFLAGS+=-O2 KCFLAGS+=-Wno-error Image
           echo "========== Image Debug =========="
           ls -lh out/arch/arm64/boot/Image || true
           file out/arch/arm64/boot/Image || true
           sha256sum out/arch/arm64/boot/Image || true
           strings out/arch/arm64/boot/Image | grep -E 'Linux version|clang version|rustc version|SukiSU|KernelSU|susfs' | head -n 30 || true
+          strings out/arch/arm64/boot/Image | grep 'Linux version' || true
           echo "================================="
-          strings out/arch/arm64/boot/Image | grep 'Linux version'
           ccache -s
-
       - name: Stop on original make fallback
         if: ${{ !inputs.FAST_BUILD || steps.fast_build.outputs.fallback}}
         run: |
