@@ -528,12 +528,12 @@ jobs:
         run: |
           cd kernel_workspace/kernel_platform
           
-          echo "正在配置ReSukiSU..."
-          curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/refs/heads/main/kernel/setup.sh" | bash -s 6ee2f7fd
+          echo "正在配置ReSukiSU..." #6ee2f7fd-34920
+          curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/refs/heads/main/kernel/setup.sh" | bash -s main
           echo 'CONFIG_KSU_FULL_NAME_FORMAT="%TAG_NAME%-%COMMIT_SHA%@vring"' >> ./common/arch/arm64/configs/gki_defconfig
           cd ./KernelSU
           # 生成自定义版本号（基于提交计数）, 失败时使用 114514
-          KSU_VERSION=$(expr $(git rev-list --count 6ee2f7fd) + 30700 2>/dev/null || echo 114514)
+          KSU_VERSION=$(expr $(git rev-list --count main) + 30700 2>/dev/null || echo 114514)
           # 存储版本号到 GitHub 环境变量
           echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
           echo "ksuver=$KSU_VERSION" >> $GITHUB_OUTPUT
@@ -545,23 +545,23 @@ jobs:
           SUSFS_BRANCH="gki-${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}"
           git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}
           
-          cd susfs4ksu
-          if [ "$SUSFS_BRANCH" = "gki-android12-5.10" ]; then
-            git checkout 86114db0
+          #cd susfs4ksu
+          #if [ "$SUSFS_BRANCH" = "gki-android12-5.10" ]; then
+          # git checkout 86114db0
           
-           elif [ "$SUSFS_BRANCH" = "gki-android13-5.15" ]; then
-            git checkout e4bd49f7
-          elif [ "$SUSFS_BRANCH" = "gki-android14-6.1" ]; then
-            git checkout 9bf72ec2
-          elif [ "$SUSFS_BRANCH" = "gki-android15-6.6" ]; then
-            git checkout 2df41de7
-          elif [ "$SUSFS_BRANCH" = "gki-android16-6.12" ]; then
-            git checkout 75a61385
-          else
-            echo "No specific commit for this"
-            exit 500
-          fi
-          cd ../
+          # elif [ "$SUSFS_BRANCH" = "gki-android13-5.15" ]; then
+          #  git checkout e4bd49f7
+          #elif [ "$SUSFS_BRANCH" = "gki-android14-6.1" ]; then
+          #  git checkout 9bf72ec2
+          #elif [ "$SUSFS_BRANCH" = "gki-android15-6.6" ]; then
+          #  git checkout 2df41de7
+         # elif [ "$SUSFS_BRANCH" = "gki-android16-6.12" ]; then
+          #  git checkout 75a61385
+          #else
+          #  echo "No specific commit for this"
+           # exit 500
+          # fi
+          #cd ../
           
           git clone https://github.com/ShirkNeko/SukiSU_patch.git
           git clone https://github.com/Numbersf/Action-Build.git
