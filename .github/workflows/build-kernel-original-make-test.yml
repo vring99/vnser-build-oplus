@@ -844,8 +844,8 @@ jobs:
           # TMPFS配置*
           echo "CONFIG_TMPFS_XATTR=y" >> "$CONFIG_FILE"
           echo "CONFIG_TMPFS_POSIX_ACL=y" >> "$CONFIG_FILE"
-          echo "CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE=y" >> "$CONFIG_FILE"
-          echo "CONFIG_HEADERS_INSTALL=n" >> "$CONFIG_FILE"
+          #echo "CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE=y" >> "$CONFIG_FILE"
+          #echo "CONFIG_HEADERS_INSTALL=n" >> "$CONFIG_FILE"
           
           # BBR配置*
           echo "CONFIG_TCP_CONG_ADVANCED=y" >> "$CONFIG_FILE" 
@@ -878,7 +878,7 @@ jobs:
           IPV6="${{ inputs.IPV6 }}"
           # IPSET & IPv6_NAT配置*
           if [[ "${CPU}" == sm*  && "${IPV6}" = "true" ]]; then
-                   if [[ "$KERNEL_VERSION" != "6.12" ]]; then
+            if [[ "$KERNEL_VERSION" != "6.12" ]]; then
               echo "CONFIG_BPF_STREAM_PARSER=y" >> "$CONFIG_FILE"
             fi
             echo "CONFIG_NETFILTER_XT_MATCH_ADDRTYPE=y" >> "$CONFIG_FILE"
