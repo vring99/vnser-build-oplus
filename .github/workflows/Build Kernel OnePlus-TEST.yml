@@ -16,7 +16,8 @@ jobs:
             sched: false
             ipv6: false
 
-    uses: ./.github/workflows/build-kernel-original-make-test.yml
+    #uses: ./.github/workflows/build-kernel-original-make-test.yml
+    uses: ./.github/workflows/build-kernel-original-make.xml
     secrets: inherit
     with:
       FILE: ${{ matrix.file }}
