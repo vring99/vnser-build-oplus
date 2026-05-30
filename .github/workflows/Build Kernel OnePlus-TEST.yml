@@ -16,6 +16,107 @@ jobs:
             sched: false
             ipv6: false
 
+          - file: oneplus_ace5_race
+            kpm: true
+            sched: false
+            ipv6: false
+
+          - file: oneplus_pad_mt6897_b
+            kpm: true
+            sched: false
+            ipv6: false
+
+          - file: oneplus_pad_mt6897_v
+            kpm: true
+            sched: false
+            ipv6: false
+
+
+
+          - file: oneplus_pad_2_pro
+            kpm: true
+            sched: true
+            ipv6: true
+
+          - file: oneplus_pad_2_pro_b
+            kpm: true
+            sched: true
+            ipv6: true
+
+          - file: oneplus_13
+            kpm: true
+            sched: true
+            ipv6: true
+
+          - file: oneplus_13_b
+            kpm: true
+            sched: true
+            ipv6: true
+
+
+          - file: oneplus_13t
+            kpm: true
+            sched: true
+            ipv6: true
+
+          - file: oneplus_13t_b
+            kpm: true
+            sched: true
+            ipv6: true
+
+
+          - file: oneplus_ace5_pro
+            kpm: true
+            sched: true
+            ipv6: true
+
+          - file: oneplus_ace5_pro_b
+            kpm: true
+            sched: true
+            ipv6: true
+
+
+          - file: oneplus_pad_3
+            kpm: true
+            sched: true
+            ipv6: true
+
+          - file: oneplus_pad_3_b
+            kpm: true
+            sched: true
+            ipv6: true
+
+          - file: oneplus_ace_6
+            kpm: true
+            sched: true
+            ipv6: true
+
+          - file: oneplus_turbo_6
+            kpm: true
+            sched: true
+            ipv6: true
+
+
+          - file: oneplus_ace5_ultra_b_vring
+            kpm: true
+            sched: true
+            ipv6: false
+
+          - file: oneplus_ace5_ultra
+            kpm: true
+            sched: true
+            ipv6: false
+
+          - file: oneplus_ace5_ultra_b
+            kpm: true
+            sched: true
+            ipv6: false
+
+          - file: oneplus_pad2_mt6991_b
+            kpm: true
+            sched: true
+            ipv6: false
+
     #uses: ./.github/workflows/build-kernel-original-make-test.yml
     uses: ./.github/workflows/build-kernel-original-make.yml
     secrets: inherit
