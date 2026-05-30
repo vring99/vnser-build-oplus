@@ -69,11 +69,6 @@ on:
         description: "是否优化ipv6？"
         required: false
         default: true
-      DISABLE_ROOT_FEATURES:
-        type: boolean
-        description: "调试：关闭 KSU/KPM/BBG/UNICODE/SUSFS"
-        required: false
-        default: true
 jobs:
   load:
     name: ${{ inputs.SCHED  && ' [SCHED]' || '' }}${{ inputs.LSM  && ' [LSM]' || '' }}${{ inputs.KPM && ' [KPM]' || '' }}For ${{ inputs.FILE }} ${{ inputs.SUFFIX }}
@@ -307,24 +302,42 @@ jobs:
           fi
           ccache -s
 
+      - name: Install Repo Tool
+        run: |
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/repo
+          chmod a+x ~/repo
+          sudo mv ~/repo /usr/local/bin/repo
 
-      - name: Initialize CCTV Ace5 Race Source
+      - name: Initialize Repo and Sync
         env:
           FILE: ${{ inputs.FILE }}
         run: |
           mkdir kernel_workspace && cd kernel_workspace
-          echo "固定使用 cctv18/android_kernel_oneplus_mt6989 ace5_race 源码"
-          curl -L --retry 5 --retry-delay 2 --retry-connrefused https://github.com/cctv18/android_kernel_oneplus_mt6989/archive/refs/heads/oneplus/mt6989_b_16.0.0_ace5_race.zip -o common.zip
-          unzip -q common.zip
-          rm -f common.zip
-          mv android_kernel_oneplus_mt6989-oneplus-mt6989_b_16.0.0_ace5_race common
-          mkdir -p kernel_platform
-          ln -s ../common kernel_platform/common
-          echo "KERNEL_REPOS=" >> "$GITHUB_ENV"
-          echo "源码结构调试:"
-          ls -ld common kernel_platform kernel_platform/common
-          test -f common/Makefile
-          test -f kernel_platform/common/Makefile
+          mkdir -p .repo/manifests
+          cp "$GITHUB_WORKSPACE/.repo/manifests_fallback/${FILE}.xml" ".repo/manifests/${FILE}.xml"
+          BASE_URL="https://github.com/${MANIFEST_REPO}/${MANIFEST_REPO_NAME}.git"
+          
+          echo "使用$MANIFEST_REPO/$MANIFEST_REPO_NAME($MANIFEST_BRANCH)初始化仓库..."
+          repo init -u "$BASE_URL" -b "$MANIFEST_BRANCH" -m "${FILE}.xml" --depth=1 --no-clone-bundle --no-tags
+          repo sync -c -j$(nproc) --no-clone-bundle --no-tags --force-sync
+          
+          KERNEL_REPOS=""
+          KERNEL_REPOS_PATH=$(find . -type f -name "build.config.msm.common" | head -n 1)
+          if [[ -n "$KERNEL_REPOS_PATH" ]]; then
+            KERNEL_REPOS=$(echo "${KERNEL_REPOS_PATH#./}" | cut -d/ -f2)
+            echo "✅ 发现 build.config.msm.common: $KERNEL_REPOS_PATH"
+            echo "✅ KERNEL_REPOS=$KERNEL_REPOS"
+            echo "KERNEL_REPOS=$KERNEL_REPOS" >> "$GITHUB_ENV"
+          else
+            echo "❎ 未找到 build.config.msm.common，可能是天玑清单或纯 Kleaf 构建结构"
+          fi
+          
+          for dir in kernel_platform/common kernel_platform/$KERNEL_REPOS; do
+            if [ -e "$dir/BUILD.bazel" ]; then
+              sed -i '/^[[:space:]]*"protected_exports_list"[[:space:]]*:[[:space:]]*"android\/abi_gki_protected_exports_aarch64",$/d' "$dir/BUILD.bazel"
+            fi
+            rm -f "$dir/android/abi_gki_protected_exports_"* 2>/dev/null || echo "No protected exports in $dir"
+          done
 
       - name: Kernel Version Handling
         run: |
@@ -391,24 +404,6 @@ jobs:
             echo "ENABLE_RUST=false" >> $GITHUB_ENV
           fi
 
-      - name: Prepare CCTV Toolchain
-        run: |
-          cd kernel_workspace
-          rm -rf clang20 build-tools clang.zip build-tools.zip
-          mkdir -p clang20
-          curl -L --retry 5 --retry-delay 2 --retry-connrefused https://github.com/cctv18/oneplus_sm8650_toolchain/releases/download/LLVM-Clang20-r547379/clang-r547379.zip -o clang.zip
-          unzip -q clang.zip -d clang20
-          curl -L --retry 5 --retry-delay 2 --retry-connrefused https://github.com/cctv18/oneplus_sm8650_toolchain/releases/download/LLVM-Clang20-r547379/build-tools.zip -o build-tools.zip
-          unzip -q build-tools.zip
-          rm -f clang.zip build-tools.zip
-          test -x clang20/bin/clang
-          test -x clang20/bin/ld.lld
-          test -x build-tools/bin/pahole
-          echo "CCTV_CLANG_BIN=$GITHUB_WORKSPACE/kernel_workspace/clang20/bin" >> "$GITHUB_ENV"
-          echo "CCTV_CLANG_LIB=$GITHUB_WORKSPACE/kernel_workspace/clang20/lib" >> "$GITHUB_ENV"
-          echo "CCTV_BUILD_TOOLS_BIN=$GITHUB_WORKSPACE/kernel_workspace/build-tools/bin" >> "$GITHUB_ENV"
-
-
       # 自定义内核后缀
       - name: Custom Kernel Suffix if set
         if: ${{ inputs.SUFFIX != '' }}
@@ -435,6 +430,9 @@ jobs:
           
             echo "Modifying: $path"
           
+            # Remove -dirty
+            sed -i 's/ -dirty//g' "$path"
+            sed -i '$i res=$(echo "$res" | sed '\''s/-dirty//g'\'')' "$path"
           
             if grep -q 'KERNELVERSION.*scm_version' "$path"; then
               echo "Detected NEW setlocalversion format"
@@ -475,10 +473,6 @@ jobs:
           RANDOM_DIGIT=$(od -An -N1 -tu1 < /dev/urandom | tr -d '[:space:]' | awk '{print $1 % 11}')
           RANDOM_HASH=$(od -An -N7 -tx1 /dev/urandom | tr -d ' \n')
           RANDOM_SUFFIX="${RANDOM_DIGIT}-o-g${RANDOM_HASH}"
-          if [ "$KERNEL_VERSION" = "6.1" ] && [[ "${{ env.CPU }}" == mt* ]]; then
-            RANDOM_HASH=$(od -An -N7 -tx1 /dev/urandom | tr -d ' \n')
-            RANDOM_SUFFIX="11-o-g${RANDOM_HASH}"
-          fi
           if [ "$KERNEL_VERSION" = "6.12" ]; then
             GIT_PART=$(od -An -N6 -tx1 /dev/urandom | tr -d ' \n')
             AB_PART=$(printf "%08d" $(( $(od -An -N4 -tu4 /dev/urandom) % 100000000 )))
@@ -518,13 +512,12 @@ jobs:
           
 
       - name: Add SukiSU Ultra
-        if: ${{ !inputs.DISABLE_ROOT_FEATURES }}
         run: |
           cd kernel_workspace/kernel_platform
           
           echo "正在配置ReSukiSU..."
           curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/refs/heads/main/kernel/setup.sh" | bash -s main
-          echo 'CONFIG_KSU_FULL_NAME_FORMAT="%TAG_NAME%-%COMMIT_SHA%@cctv18"' >> ./common/arch/arm64/configs/gki_defconfig
+          echo 'CONFIG_KSU_FULL_NAME_FORMAT="%TAG_NAME%-%COMMIT_SHA%@vring"' >> ./common/arch/arm64/configs/gki_defconfig
           cd ./KernelSU
           # 生成自定义版本号（基于提交计数）, 失败时使用 114514
           KSU_VERSION=$(expr $(git rev-list --count main) + 30700 2>/dev/null || echo 114514)
@@ -532,19 +525,205 @@ jobs:
           echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
           echo "ksuver=$KSU_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Apply KernelSU SUSFS Patches CCTV
-        if: ${{ !inputs.DISABLE_ROOT_FEATURES }}
+      - name: Apply Patches SukiSU Ultra
         run: |
           cd kernel_workspace
-          echo "正在添加 cctv susfs4oki 补丁..."
-          git clone --depth=1 https://github.com/cctv18/susfs4oki.git susfs4ksu -b oki-${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}
+          
+          SUSFS_BRANCH="gki-${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}"
+          git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}
+          
+          #cd susfs4ksu
+          #if [ "$SUSFS_BRANCH" = "gki-android12-5.10" ]; then
+          #  git checkout e1681bc4
+          
+           #elif [ "$SUSFS_BRANCH" = "gki-android13-5.15" ]; then
+           # git checkout 349ed52e
+          #elif [ "$SUSFS_BRANCH" = "gki-android14-6.1" ]; then
+          #  git checkout ef16cbce
+          #elif [ "$SUSFS_BRANCH" = "gki-android15-6.6" ]; then
+          #  git checkout de8d8ca1
+          #elif [ "$SUSFS_BRANCH" = "gki-android16-6.12" ]; then
+          #  git checkout fd03bb9c
+          #else
+          #  echo "No specific commit for this"
+          #  exit 500
+          #fi
+          #cd ../
+          
+          git clone https://github.com/ShirkNeko/SukiSU_patch.git
+          git clone https://github.com/Numbersf/Action-Build.git
           cd kernel_platform
+          echo "正在拉取susfs补丁"
           cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}.patch ./common/
           cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
           cp ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
+          
+          if [ "${{ inputs.ZRAM }}" = "true" ]; then
+            echo "正在拉取zram补丁"
+            cp -r ../SukiSU_patch/other/zram/lz4k/include/linux/* ./common/include/linux/
+            cp -r ../SukiSU_patch/other/zram/lz4k/lib/* ./common/lib/
+            cp -r ../SukiSU_patch/other/zram/lz4k/crypto/* ./common/crypto/
+            cp -r ../SukiSU_patch/other/zram/lz4k_oplus ./common/lib/
+          fi
+          
           cd ./common
+          GKI_V="${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}"
+          SUBLEVEL=$(grep '^SUBLEVEL *=' Makefile | head -n1 | cut -d= -f2 | tr -d ' ')
+          
+          if [ "$GKI_V" == "android13-5.15" ] && [ "$SUBLEVEL" -lt 123 ]; then
+            echo "修复内核版本为5.15.0~5.15.123仅支持旧版C库造成的一些bug"
+            cp ../../Action-Build/patches/fix_5.15.legacy ./fix_5.15.legacy.patch
+            patch -p1 < fix_5.15.legacy.patch
+            echo "fix_5.15_patch完成"
+          fi
+          KERNEL_VERSION="${{ env.KERNEL_VERSION }}"
+          TKERNEL_VERSION="${{ env.TKERNEL_VERSION }}"
+          file="${{ inputs.FILE }}"
+          TRUSTY_EXISTS="false"
+          if [[ "$KERNEL_VERSION" == "6.6" ]]; then
+            if grep -q 'common-modules/trusty' "$GITHUB_WORKSPACE/.repo/manifests_fallback/${file}.xml"; then
+              TRUSTY_EXISTS="true"
+            fi
+            echo "trusty_exists=$TRUSTY_EXISTS" >> $GITHUB_OUTPUT
+          
+            if [[ "$TRUSTY_EXISTS" == "false" && "$(printf '%s\n' "$TKERNEL_VERSION" "6.6.30" | sort -V | head -n1)" = "$TKERNEL_VERSION" ]]; then
+              echo "修复内核版本6.6部分机型缺失Trusty OS导致的susfs的报错"
+              sed -i 's/-32,12 +32,38/-32,11 +32,37/g' 50_add_susfs_in_gki-${{ env.KANDROID_VERSION }}-${KERNEL_VERSION}.patch
+              sed -i '/#include <trace\/hooks\/fs.h>/d' 50_add_susfs_in_gki-${{ env.KANDROID_VERSION }}-${KERNEL_VERSION}.patch
+            fi
+          fi
+          # Fake Patch to fix failures
+          fake_patched=0
+          if [ "$GKI_V" = "android15-6.6" ]; then
+            if ! grep -qxF $'\tunsigned int nr_subpages = __PAGE_SIZE / PAGE_SIZE;' ./fs/proc/task_mmu.c; then
+              echo "未找到 nr_subpages,正在进行补丁修复"
+              sed -i -e '/int ret = 0, copied = 0;/a \\tunsigned int nr_subpages \= __PAGE_SIZE \/ PAGE_SIZE;' -e '/int ret = 0, copied = 0;/a \\tpagemap_entry_t \*res = NULL;' ./fs/proc/task_mmu.c
+              fake_patched=1
+            fi
+          fi
+          if [ "$GKI_V" = "android12-5.10" ] || [ "$GKI_V" = "android13-5.15" ]; then
+            if ! grep -qxF $'\tif (!vma_pages(vma))' ./fs/proc/task_mmu.c; then
+              echo "未找到 vma_pages,正在进行补丁修复"
+              fake_patched=1
+            fi
+          fi
+          
+          echo "正在打susfs补丁"
           patch -p1 < 50_add_susfs_in_gki-${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}.patch || true
-          echo "cctv susfs_patch完成"
+          echo "susfs_patch完成"
+          
+          # Revert
+          if [ "$fake_patched" = 1 ]; then
+            if [ "$GKI_V" = "android15-6.6" ]; then
+              if grep -qxF $'\tunsigned int nr_subpages = __PAGE_SIZE / PAGE_SIZE;' ./fs/proc/task_mmu.c; then
+                sed -i -e '/unsigned int nr_subpages \= __PAGE_SIZE \/ PAGE_SIZE;/d' -e '/pagemap_entry_t \*res = NULL;/d' ./fs/proc/task_mmu.c
+              fi
+            fi
+            if [ "$GKI_V" = "android12-5.10" ] || [ "$GKI_V" = "android13-5.15" ]; then
+              if grep -qxF $'\t\tgoto show_pad;' ./fs/proc/task_mmu.c; then
+                sed -i -e 's/goto show_pad;/return 0;/' ./fs/proc/task_mmu.c
+              fi
+            fi
+          fi
+          
+          CURRENT_SUB="$SUBLEVEL"
+          if [[ ! "$CURRENT_SUB" =~ ^[0-9]+$ ]]; then
+            CURRENT_SUB=99999
+          fi
+          echo "应用 SUSFS 补丁..."
+          SUSFS_VERSION="2.1.0"
+          KERNEL_PATCHES=$GITHUB_WORKSPACE/kernel_patches
+          git clone https://github.com/WildKernels/kernel_patches.git "$KERNEL_PATCHES"
+          
+          if [[ "$GKI_V" == "android12-5.10" ]]; then
+              if [[ "$CURRENT_SUB" -le 209 ]]; then
+                sed -i -e 's/goto show_pad;/return 0;/' ./fs/proc/task_mmu.c
+              fi
+              if [[ "$CURRENT_SUB" -le 117 ]]; then
+                cp $KERNEL_PATCHES/wild/archived/susfs_fix_patches/v${SUSFS_VERSION}/a12-5.10/fdinfo.c.patch ./
+                patch -p1 < fdinfo.c.patch || true
+              fi
+              if [[ "$CURRENT_SUB" -le 43 ]]; then
+                cp $KERNEL_PATCHES/wild/archived/susfs_fix_patches/v${SUSFS_VERSION}/a12-5.10/base.c.patch ./
+                patch -p1 < base.c.patch || true
+              fi
+          fi
+          if [[ "$GKI_V" == "android13-5.15" ]]; then 
+            #if [[ "$CURRENT_SUB" -gt 167 ]]; then
+              # memory.c
+          
+              echo "===== 检查 ====="
+              grep -n "SUSFS_IS_INODE_SUS_MAP" mm/memory.c
+              grep -R "define SUSFS_IS_INODE_SUS_MAP" -n include fs mm kernel 2>/dev/null
+              grep -n "susfs_def.h" mm/memory.c || echo "memory.c 缺少 susfs_def.h"
+          
+              echo "===== 修复 ====="
+             if grep -q "SUSFS_IS_INODE_SUS_MAP" mm/memory.c && ! grep -q "susfs_def.h" mm/memory.c; then
+                  sed -i '/#include <linux\/vmalloc.h>/a \
+                  #ifdef CONFIG_KSU_SUSFS_SUS_MAP\n#include <linux/susfs_def.h>\n#endif' mm/memory.c
+              fi
+          
+              echo "===== 验证 ====="
+              grep -n "susfs_def.h\|SUSFS_IS_INODE_SUS_MAP" mm/memory.c
+          
+          
+            #fi
+          fi
+          
+          
+          # Android 14 - 6.1 修复
+          if [[ "$GKI_V" == "android14-6.1" ]]; then
+            if [[ "$CURRENT_SUB" -le 141 || "$CURRENT_SUB" -ge 145 ]]; then
+              cp $KERNEL_PATCHES/wild/archived/susfs_fix_patches/v${SUSFS_VERSION}/a14-6.1/base.c.patch ./
+              patch -p1 < base.c.patch || true
+            fi
+            if ! grep -qF '#include <linux/dma-buf.h>' ./fs/proc/base.c; then
+              sed -i '/#include <linux\/cpufreq_times.h>/a #include <linux\/dma-buf.h>' ./fs/proc/base.c
+            fi
+            if grep -q 'susfs_is_current_proc_umounted' ./fs/proc/base.c && ! grep -qF '#include <linux/susfs.h>' ./fs/proc/base.c; then
+              sed -i '/#include <linux\/dma-buf.h>/a #include <linux\/susfs.h>' ./fs/proc/base.c
+            fi
+            if [[ "$CURRENT_SUB" -le 128 ]]; then
+              sed -i -e 's/goto show_pad;/return 0;/' ./fs/proc/task_mmu.c
+            fi
+          fi
+          
+          # Android 15 - 6.6 修复
+          if [[ "$GKI_V" == "android15-6.6" ]]; then
+            if [[ "$CURRENT_SUB" -ge 98 ]]; then
+              cp $KERNEL_PATCHES/wild/archived/susfs_fix_patches/v${SUSFS_VERSION}/a15-6.6/base.c.patch ./
+              patch -p1 < base.c.patch || true
+            fi
+            # 修复 6.6.50~6.6.97: 缺少 susfs_def.h 导致编译报 undeclared identifier
+            if grep -q 'AS_FLAGS_SUS_MAP\|susfs_is_current_proc_umounted' ./fs/proc/base.c && ! grep -qF 'susfs_def.h' ./fs/proc/base.c; then
+              if ! grep -qF '#include <linux/dma-buf.h>' ./fs/proc/base.c; then
+                sed -i '/#include <linux\/cpufreq_times.h>/a #include <linux\/dma-buf.h>' ./fs/proc/base.c
+              fi
+              sed -i '/#include <linux\/dma-buf.h>/a #endif' ./fs/proc/base.c
+              sed -i '/#include <linux\/dma-buf.h>/a #include <linux\/susfs_def.h>' ./fs/proc/base.c
+              sed -i '/#include <linux\/dma-buf.h>/a #ifdef CONFIG_KSU_SUSFS_SUS_MAP' ./fs/proc/base.c
+            fi
+            # 修复 ReSukiSU: 缺少 susfs.h 导致编译报 undeclared identifier
+            if grep -q 'SUSFS_IS_INODE_SUS_MAP\|SUSFS_IS_INODE_OPEN_REDIRECT' ./fs/proc/base.c && ! grep -qF '#include <linux/susfs.h>' ./fs/proc/base.c; then
+              if ! grep -qF '#include <linux/dma-buf.h>' ./fs/proc/base.c; then
+                sed -i '/#include <linux\/cpufreq_times.h>/a #include <linux\/dma-buf.h>' ./fs/proc/base.c
+              fi
+              sed -i '/#include <linux\/dma-buf.h>/a #include <linux\/susfs.h>' ./fs/proc/base.c
+            fi
+          
+          
+          
+            if [[ "$CURRENT_SUB" -le 58 ]]; then
+              # memory.c
+              sed -i '/#include <linux\/sched\/sysctl.h>/a \
+              #ifdef CONFIG_KSU_SUSFS_SUS_MAP\n#include <linux/susfs_def.h>\n#endif' mm/memory.c
+              # fs/proc/base.c
+              sed -i '/#include <linux\/dma-buf.h>/a \
+              #if defined(CONFIG_KSU_SUSFS_SUS_MAP) || defined(CONFIG_KSU_SUSFS_OPEN_REDIRECT)\n#include <linux/susfs_def.h>\n#endif' fs/proc/base.c
+          
+            fi
+          fi
+
       # OGKI转换GKI，无需修改 dtbo 开机
       - name: Apply Convert HMBIRD_OGKI to HMBIRD_GKI
         if: ${{ fromJSON(env.KV1) >= 6 && fromJSON(env.KV2) >= 66 && github.event.inputs.SCHED == 'false' }}
@@ -608,7 +787,6 @@ jobs:
           fi
 
       - name: Apply UNICODE_BYPASS and MEMORY_OPT
-        if: ${{ !inputs.DISABLE_ROOT_FEATURES }}
         run: |
           PATCH_DIR="${GITHUB_WORKSPACE}/kernel_workspace/Action-Build/patches"
           cd kernel_workspace/kernel_platform/common
@@ -626,11 +804,11 @@ jobs:
       #    patch -p1 -N -F 3 < 70_selinux_hide_policy_query.patch || true
 
       - name: Apply LSM_BBG
-        if: ${{ inputs.LSM && !inputs.DISABLE_ROOT_FEATURES }}
+        if: ${{ inputs.LSM }}
         run: |
           cd kernel_workspace/kernel_platform/common
           echo "正在启用内核级基带保护支持…"
-          curl -sSL https://github.com/cctv18/Baseband-guard/raw/master/setup.sh | bash
+          curl -LSs https://raw.githubusercontent.com/vc-teahouse/Baseband-guard/main/setup.sh | bash
           sed -i '/^config LSM$/,/^help$/{ /^[[:space:]]*default/ { /baseband_guard/! s/selinux/selinux,baseband_guard/ } }' ./security/Kconfig
 
       # 配置信息,带*为附加项目,具有一定危险性和不确定性
@@ -641,27 +819,17 @@ jobs:
           KERNEL_VERSION="${{ env.KERNEL_VERSION }}"
           
           # SukiSU Ultra配置
-          if [ "${{ inputs.DISABLE_ROOT_FEATURES }}" != "true" ]; then
-            echo "CONFIG_KSU=y" >> "$CONFIG_FILE"
-          fi
+          echo "CONFIG_KSU=y" >> "$CONFIG_FILE"
           
           # KPM配置
-          if [ "${{ inputs.DISABLE_ROOT_FEATURES }}" != "true" ]; then
-            echo "CONFIG_KPM=y" >> "$CONFIG_FILE"
-          fi
+          echo "CONFIG_KPM=y" >> "$CONFIG_FILE"
           
           # HOOK配置
           
           
           # SUSFS配置
-          if [ "${{ inputs.DISABLE_ROOT_FEATURES }}" != "true" ]; then
-            cat >> "$CONFIG_FILE" << 'EOF'
+          cat >> "$CONFIG_FILE" << 'EOF'
           CONFIG_KSU_SUSFS=y
-          CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y
-          CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y
-          CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y
-          CONFIG_KSU_SUSFS_TRY_UMOUNT=y
-          CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y
           CONFIG_KSU_SUSFS_SUS_PATH=y
           CONFIG_KSU_SUSFS_SUS_MOUNT=y
           CONFIG_KSU_SUSFS_SUS_KSTAT=y
@@ -672,7 +840,6 @@ jobs:
           CONFIG_KSU_SUSFS_OPEN_REDIRECT=y
           CONFIG_KSU_SUSFS_SUS_MAP=y
           EOF
-          fi
 
           # TMPFS配置*
           echo "CONFIG_TMPFS_XATTR=y" >> "$CONFIG_FILE"
@@ -680,6 +847,19 @@ jobs:
           echo "CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE=y" >> "$CONFIG_FILE"
           echo "CONFIG_HEADERS_INSTALL=n" >> "$CONFIG_FILE"
           
+          # BBR配置*
+          echo "CONFIG_TCP_CONG_ADVANCED=y" >> "$CONFIG_FILE" 
+          echo "CONFIG_TCP_CONG_BBR=y" >> "$CONFIG_FILE"
+          echo "CONFIG_NET_SCH_FQ=y" >> "$CONFIG_FILE"
+          echo "CONFIG_TCP_CONG_BIC=n" >> "$CONFIG_FILE"
+          echo "CONFIG_TCP_CONG_WESTWOOD=n" >> "$CONFIG_FILE"
+          echo "CONFIG_TCP_CONG_HTCP=n" >> "$CONFIG_FILE"
+          
+          # ECN配置*
+          echo "CONFIG_IP_ECN=y" >> "$CONFIG_FILE"
+          echo "CONFIG_TCP_ECN=y" >> "$CONFIG_FILE"
+          echo "CONFIG_IPV6_ECN=y" >> "$CONFIG_FILE"
+          echo "CONFIG_IP_NF_TARGET_ECN=y" >> "$CONFIG_FILE"
           
           # ZRAM配置*
           if [ "${{ inputs.ZRAM }}" = "true" ]; then
@@ -692,7 +872,7 @@ jobs:
           fi
           
           # LSM配置*
-          if [ "${{ inputs.LSM }}" = "true" ] && [ "${{ inputs.DISABLE_ROOT_FEATURES }}" != "true" ]; then
+          if [ "${{ inputs.LSM }}" = "true" ]; then
             echo "CONFIG_BBG=y" >> "$CONFIG_FILE"
           fi
           IPV6="${{ inputs.IPV6 }}"
@@ -726,7 +906,7 @@ jobs:
           fi
           
           # 修复构建问题
-          # MTK 6.1 使用 cctv 134 开机版配置，不额外强制关闭 DEBUG_INFO_BTF。
+          # MTK 6.1: keep the verified bootable BTF setting; do not force DEBUG_INFO_BTF=n.
           if [[ "$ENABLE_RUST" == "true" ]]; then
             echo "CONFIG_RUST=y" >> "$CONFIG_FILE"
             echo "CONFIG_ANDROID_BINDER_IPC_RUST=m" >> "$CONFIG_FILE"
@@ -780,77 +960,166 @@ jobs:
           echo "Disabling GPUEB for MTK kernel 5.10"
           sed -i '/obj-y.*gpueb/d' kernel_workspace/kernel-5.10/drivers/gpu/mediatek/Makefile
 
-      - name: Build Kernel CCTV Make
+      - name: Build Kernel Repo Toolchain Make
         if: ${{ inputs.FAST_BUILD }}
         id: fast_build
         run: |
-          WORKDIR="$GITHUB_WORKSPACE"
-          export PATH="$GITHUB_WORKSPACE/kernel_workspace/build-tools/bin:$GITHUB_WORKSPACE/kernel_workspace/clang20/bin:/usr/lib/ccache:$PATH"
-          export CCACHE_LOGFILE="$GITHUB_WORKSPACE/kernel_workspace/ccache.log"
-          export CCACHE_COMPILERCHECK="none"
+          KERNEL_VERSION="${{ env.KERNEL_VERSION }}"
+          KANDROID_VERSION="${{ env.KANDROID_VERSION }}"
+
+          cd kernel_workspace/kernel_platform
+
+          REPO_CLANG_PREBUILT_BIN=""
+          for f in ./common/build.config.common ./"$KERNEL_REPOS"/build.config.common; do
+            [[ -f "$f" ]] || continue
+            REPO_CLANG_PREBUILT_BIN=$(grep '^CLANG_PREBUILT_BIN=' "$f" | cut -d'=' -f2)
+            [[ -n "$REPO_CLANG_PREBUILT_BIN" ]] && break
+          done
+          if [[ -z "$REPO_CLANG_PREBUILT_BIN" ]]; then
+            echo "::error::CLANG_PREBUILT_BIN 未在 build.config.common 中找到"
+            exit 1
+          fi
+
+          if [[ "$REPO_CLANG_PREBUILT_BIN" =~ (clang-r[0-9a-z]+) ]]; then
+            REPO_CLANG_VERSION="${BASH_REMATCH[1]}"
+          elif [[ -f ./common/build.config.constants ]]; then
+            REPO_CLANG_VERSION=$(grep '^CLANG_VERSION=' ./common/build.config.constants | cut -d'=' -f2 || true)
+          fi
+          if [[ -n "$REPO_CLANG_VERSION" ]]; then
+            REPO_CLANG_PREBUILT_BIN=${REPO_CLANG_PREBUILT_BIN/\$\{CLANG_VERSION\}/$REPO_CLANG_VERSION}
+          fi
+
+          CLANG_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$REPO_CLANG_PREBUILT_BIN"
+          CLANG_LIB="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$(dirname "$REPO_CLANG_PREBUILT_BIN")/lib"
+          RUST_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/rust/linux-x86/${{ env.RUSTC_VERSION }}/bin"
+          BUILD_TOOLS_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/kernel-build-tools/linux-x86/bin"
+          BINDGEN_DIR=""
+          BINDGEN_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/clang-tools/linux-x86/bin/bindgen"
+          if [[ -x "$BINDGEN_BIN" ]]; then
+            BINDGEN_DIR=$(dirname "$BINDGEN_BIN")
+          fi
+
+          cd common
+          SETUP_ENV_BRANCH="android16-6.12-2025-06"
+          if curl -fsSL "https://raw.githubusercontent.com/cctv18/android_gki_kernel_common/refs/heads/${SETUP_ENV_BRANCH}/_setup_env.sh" -o ./_setup_env.sh; then
+            source "./_setup_env.sh" || true
+          else
+            echo "未找到 ${SETUP_ENV_BRANCH}/_setup_env.sh，继续使用当前源码环境"
+          fi
+          unset CLANG_PREBUILT_BIN CLANG_VERSION
+
+          if [[ "${{ env.ENABLE_RUST }}" == "true" ]]; then
+            export PATH="$CLANG_BIN:$BUILD_TOOLS_BIN:$RUST_BIN${BINDGEN_DIR:+:$BINDGEN_DIR}:$PATH"
+          else
+            export PATH="$CLANG_BIN:$BUILD_TOOLS_BIN${BINDGEN_DIR:+:$BINDGEN_DIR}:$PATH"
+          fi
+          export LLVM=1 LLVM_IAS=1
+          export ARCH=arm64 SUBARCH=arm64
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          export CC="clang"
+          export HOSTCC="clang"
+          export LD="ld.lld"
+          export HOSTLD="ld.lld"
+          export AR="llvm-ar"
+          export NM="llvm-nm"
+          export AS="clang"
+          export READELF="llvm-readelf"
+          export OBJCOPY="llvm-objcopy"
+          export OBJDUMP="llvm-objdump"
+          export OBJSIZE="llvm-size"
+          export STRIP="llvm-strip"
+          export PAHOLE="$BUILD_TOOLS_BIN/pahole"
           export CCACHE_BASEDIR="$GITHUB_WORKSPACE"
           export CCACHE_NOHASHDIR="true"
           export CCACHE_NOHARDLINK="true"
-          export CCACHE_DIR="${{ env.CCACHE_DIR }}"
-          export CCACHE_MAXSIZE="3G"
-          export CCACHE_IS_KERNEL_COMPILING="true"
-          echo "sloppiness = file_stat_matches,include_file_ctime,include_file_mtime,pch_defines,file_macro,time_macros" >> "$CCACHE_DIR/ccache.conf"
+          export CCACHE_COMPILERCHECK="none"
 
-          cd kernel_workspace/common
-          echo "========== CCTV Toolchain Make Debug =========="
+          if [[ "${{ env.ENABLE_RUST }}" == "true" ]]; then
+            export RUSTC="rustc"
+          fi
+          [ -x "$BINDGEN_BIN" ] && export BINDGEN="$BINDGEN_BIN"
+          export LIBCLANG_PATH="$CLANG_LIB"
+
+          echo "========== Repo Toolchain Make Debug =========="
           echo "FILE=${{ inputs.FILE }}"
           echo "CPU=${{ env.CPU }}"
           echo "CPUD=${{ env.CPUD }}"
           echo "BUILD_METHOD=${{ env.BUILD_METHOD }}"
-          echo "KANDROID_VERSION=${{ env.KANDROID_VERSION }}"
-          echo "KERNEL_VERSION=${{ env.KERNEL_VERSION }}"
+          echo "KANDROID_VERSION=${KANDROID_VERSION}"
+          echo "KERNEL_VERSION=${KERNEL_VERSION}"
           echo "TKERNEL_VERSION=${{ env.TKERNEL_VERSION }}"
-          echo "WORKDIR=$WORKDIR"
-          echo "PATH_HEAD=$(echo "$PATH" | tr ':' '\n' | head -n 8 | paste -sd: -)"
+          echo "RUSTC_VERSION=${{ env.RUSTC_VERSION }}"
+          echo "SETUP_ENV_BRANCH=${SETUP_ENV_BRANCH}"
+          echo "REPO_CLANG_PREBUILT_BIN=${REPO_CLANG_PREBUILT_BIN}"
+          echo "REPO_CLANG_VERSION=${REPO_CLANG_VERSION}"
+          echo "ENV_CLANG_PREBUILT_BIN=${CLANG_PREBUILT_BIN:-}"
+          echo "CLANG_BIN=${CLANG_BIN}"
+          echo "CLANG_LIB=${CLANG_LIB}"
+          echo "RUST_BIN=${RUST_BIN}"
+          echo "BUILD_TOOLS_BIN=${BUILD_TOOLS_BIN}"
+          echo "BINDGEN_BIN=${BINDGEN_BIN}"
+          echo "PATH_HEAD=$(echo "$PATH" | tr ':' '\n' | head -n 10 | paste -sd ':' -)"
           echo "which clang=$(command -v clang || true)"
           echo "which ld.lld=$(command -v ld.lld || true)"
-          echo "which pahole=$(command -v pahole || true)"
+          if [[ "${{ env.ENABLE_RUST }}" == "true" ]]; then
+            echo "which rustc=$(command -v rustc || true)"
+          fi
+          echo "which bindgen=$(command -v bindgen || true)"
+          echo "BINDGEN=${BINDGEN:-}"
+          echo "PAHOLE=${PAHOLE}"
           clang --version | head -n 2 || true
-          ld.lld --version | head -n 1 || true
-          pahole --version 2>/dev/null | head -n 1 || true
-          echo "=============================================="
+          if [[ "${{ env.ENABLE_RUST }}" == "true" ]]; then
+            rustc --version || true
+          fi
+          [ -x "$BINDGEN_BIN" ] && bindgen --version || true
+          "$PAHOLE" --version || true
+          echo "LLVM=${LLVM} LLVM_IAS=${LLVM_IAS} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE}"
+          echo "CC=${CC} HOSTCC=${HOSTCC} LD=${LD} HOSTLD=${HOSTLD}"
+          echo "LIBCLANG_PATH=${LIBCLANG_PATH}"
+          echo "================================================"
 
-          curl -L --retry 5 --retry-delay 2 --retry-connrefused https://raw.githubusercontent.com/cctv18/oppo_oplus_realme_sm8650/main/lib/libfakestat.so -o libfakestat.so
-          curl -L --retry 5 --retry-delay 2 --retry-connrefused https://raw.githubusercontent.com/cctv18/oppo_oplus_realme_sm8650/main/lib/libfaketimeMT.so -o libfaketimeMT.so
-          chmod 777 ./libfakestat.so ./libfaketimeMT.so
-          export FAKESTAT="2025-05-25 12:00:00"
-          export FAKETIME="@2025-05-25 13:00:00"
-          SO_DIR=$(pwd)
-          export PRELOAD_LIBS="$SO_DIR/libfakestat.so $SO_DIR/libfaketimeMT.so"
-          echo '#!/bin/bash' > cc-wrapper
-          echo 'export LD_PRELOAD="'$PRELOAD_LIBS'"' >> cc-wrapper
-          echo 'export FAKESTAT="'$FAKESTAT'"' >> cc-wrapper
-          echo 'export FAKETIME="'$FAKETIME'"' >> cc-wrapper
-          echo 'ccache clang "$@"' >> cc-wrapper
-          echo '#!/bin/bash' > ld-wrapper
-          echo 'export LD_PRELOAD="'$PRELOAD_LIBS'"' >> ld-wrapper
-          echo 'export FAKESTAT="'$FAKESTAT'"' >> ld-wrapper
-          echo 'export FAKETIME="'$FAKETIME'"' >> ld-wrapper
-          echo 'ld.lld "$@"' >> ld-wrapper
-          chmod +x cc-wrapper ld-wrapper
+          COMMON_REAL_PATH=$(pwd -P)
+          PLATFORM_REAL_PATH=$(dirname "$COMMON_REAL_PATH")
+          ROOT_REAL_PATH=$(dirname "$PLATFORM_REAL_PATH")
+          KCFLAGS+=" -Wno-unused-command-line-argument"
+          KCFLAGS+=" -Wno-error=unused-command-line-argument"
+          KCFLAGS+=" -fdebug-prefix-map=$ROOT_REAL_PATH=."
+          KCFLAGS+=" -fmacro-prefix-map=$ROOT_REAL_PATH=."
+          KCFLAGS+=" -ffile-prefix-map=$ROOT_REAL_PATH=."
+          KCFLAGS+=" -no-canonical-prefixes"
+          KCFLAGS+=" -O2"
+          KCFLAGS+=" -pipe"
+          KCFLAGS+=" -Wno-error"
+          KCFLAGS+=" -fno-stack-protector"
+          KCFLAGS+=" -D__ANDROID_COMMON_KERNEL__"
+          export KCFLAGS
 
-          echo "========== Make Params Debug =========="
-          echo "defconfig: CC=ccache clang LD=ld.lld HOSTLD=ld.lld KCFLAGS+=-O2 KCFLAGS+=-Wno-error"
-          echo "image:     CC=$(pwd)/cc-wrapper LD=$(pwd)/ld-wrapper HOSTLD=ld.lld KCFLAGS+=-O2 KCFLAGS+=-Wno-error"
-          echo "======================================="
-          make -j$(nproc --all) LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" LD="ld.lld" HOSTLD=ld.lld O=out KCFLAGS+=-O2 KCFLAGS+=-Wno-error gki_defconfig
+          make -j"$(nproc --all)" LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="clang" HOSTCC="clang" LD="ld.lld" HOSTLD="ld.lld" OBJCOPY="llvm-objcopy" O=out gki_defconfig
           echo "========== Defconfig Debug =========="
           grep -E '^(CONFIG_LOCALVERSION|CONFIG_LTO_CLANG|CONFIG_LTO_CLANG_NONE|CONFIG_LTO_CLANG_THIN|CONFIG_MODULES|CONFIG_MODVERSIONS|CONFIG_RUST|CONFIG_KPM|CONFIG_KSU|CONFIG_KSU_SUSFS|CONFIG_CFG80211|CONFIG_WLAN|CONFIG_BBG|CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE|CONFIG_HEADERS_INSTALL|CONFIG_DEBUG_INFO_BTF)=' out/.config || true
           echo "====================================="
-          make -j$(nproc --all) LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="$(pwd)/cc-wrapper" LD="$(pwd)/ld-wrapper" HOSTLD=ld.lld O=out KCFLAGS+=-O2 KCFLAGS+=-Wno-error Image
+          if [[ "$KERNEL_VERSION" == "5.10" || "$KERNEL_VERSION" == "5.15" ]]; then
+            echo ">> 设置 LTO = thin"
+            scripts/config --file out/.config -e LTO_CLANG
+            scripts/config --file out/.config -e LTO_CLANG_THIN
+            scripts/config --file out/.config -d LTO_CLANG_NONE
+            scripts/config --file out/.config -d LTO_CLANG_FULL
+          fi
+
+          make -j"$(nproc --all)" LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="clang" HOSTCC="clang" LD="ld.lld" HOSTLD="ld.lld" OBJCOPY="llvm-objcopy" O=out olddefconfig
+          echo "========== Olddefconfig Debug =========="
+          grep -E '^(CONFIG_LOCALVERSION|CONFIG_LTO_CLANG|CONFIG_LTO_CLANG_NONE|CONFIG_LTO_CLANG_THIN|CONFIG_MODULES|CONFIG_MODVERSIONS|CONFIG_RUST|CONFIG_KPM|CONFIG_KSU|CONFIG_KSU_SUSFS|CONFIG_CFG80211|CONFIG_WLAN|CONFIG_BBG|CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE|CONFIG_HEADERS_INSTALL|CONFIG_DEBUG_INFO_BTF)=' out/.config || true
+          echo "========================================"
+          make -j"$(nproc --all)" LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="clang" HOSTCC="clang" LD="ld.lld" HOSTLD="ld.lld" OBJCOPY="llvm-objcopy" O=out Image
           echo "========== Image Debug =========="
           ls -lh out/arch/arm64/boot/Image || true
           file out/arch/arm64/boot/Image || true
           sha256sum out/arch/arm64/boot/Image || true
           strings out/arch/arm64/boot/Image | grep -E 'Linux version|clang version|rustc version|SukiSU|KernelSU|susfs' | head -n 30 || true
-          strings out/arch/arm64/boot/Image | grep 'Linux version' || true
           echo "================================="
+          strings out/arch/arm64/boot/Image | grep 'Linux version'
           ccache -s
+
       - name: Stop on original make fallback
         if: ${{ !inputs.FAST_BUILD || steps.fast_build.outputs.fallback}}
         run: |
@@ -860,7 +1129,7 @@ jobs:
       - name: Make AnyKernel3
         run: |
           #git clone https://github.com/Numbersf/AnyKernel3 --depth=1
-          git clone https://github.com/cctv18/AnyKernel3 --depth=1
+          git clone https://github.com/WildPlusKernel/AnyKernel3.git -b "gki-2.0"
           rm -rf ./AnyKernel3/.git
           mkdir -p kernel_workspace/kernel_platform/out/Final-Image-Find/
           dir1=""
@@ -903,16 +1172,16 @@ jobs:
 
 
       - name: Apply patch_linux and replace Image
-        if: ${{ inputs.KPM && !inputs.DISABLE_ROOT_FEATURES }}
+        if: ${{ inputs.KPM }}
         run: |
-          cd kernel_workspace/kernel_platform/common/out/arch/arm64/boot
+          cd kernel_workspace/kernel_platform/out/Final-Image-Find
+          #curl -LO --retry 5 --retry-delay 2 --retry-connrefused https://raw.githubusercontent.com/Numbersf/Action-Build/SukiSU-Ultra/patches/patch_linux
           curl -LO --retry 5 --retry-delay 2 --retry-connrefused https://github.com/SukiSU-Ultra/SukiSU_KernelPatch_patch/releases/latest/download/patch_linux
           chmod +x patch_linux
           ./patch_linux
           rm -f Image
           mv oImage Image
           cp Image $GITHUB_WORKSPACE/AnyKernel3/Image
-          cp Image $GITHUB_WORKSPACE/kernel_workspace/kernel_platform/out/Final-Image-Find/Image
 
 
 
