@@ -413,7 +413,11 @@ jobs:
           KANDROID_VERSION="${{ env.KANDROID_VERSION }}"
           KERNEL_VERSION="${{ env.KERNEL_VERSION }}"
           FAST_BUILD="${{ inputs.FAST_BUILD }}"
-          if [ "$KERNEL_VERSION" = "6.12" ]; then
+          if [ "$KERNEL_VERSION" = "6.6" ]; then
+            GIT_PART=$(od -An -N6 -tx1 /dev/urandom | tr -d ' \n')
+            AB_PART=$(printf "%08d" $(( $(od -An -N4 -tu4 /dev/urandom) % 100000000 )))
+            VERSION_SUFFIX="8-g${GIT_PART}-ab${AB_PART}-4k"
+          elif [ "$KERNEL_VERSION" = "6.12" ]; then
             GIT_PART=$(od -An -N6 -tx1 /dev/urandom | tr -d ' \n')
             AB_PART=$(printf "%08d" $(( $(od -An -N4 -tu4 /dev/urandom) % 100000000 )))
             VERSION_SUFFIX="5-g${GIT_PART}-ab${AB_PART}-4k"
@@ -449,7 +453,7 @@ jobs:
                   echo "使用官方脚本编译且当使用 build_with_bazel 时，可能受特殊符号数量限制，编译失败请修改"
                   echo "When using the official script and building with build_with_bazel, the build may fail due to a limit on the number of special characters. Please modify the configuration if that happens."
                 fi
-                tac "$path" | sed "0,/echo \"\\\$res\"/s//res=\\\$(echo \\\$res | cut -d- -f1-2)-${SUFFIX}; echo \"\\\$res\";/" | tac > "$path.tmp" && mv "$path.tmp" "$path"
+                tac "$path" | sed "0,/echo \"\\\$res\"/s//res=\\\$(echo \\\$res | cut -d- -f1-2)-${VERSION_SUFFIX}; echo \"\\\$res\";/" | tac > "$path.tmp" && mv "$path.tmp" "$path"
               fi
             else
               echo "Unknown format, appending echo manually"
@@ -473,7 +477,11 @@ jobs:
           RANDOM_DIGIT=$(od -An -N1 -tu1 < /dev/urandom | tr -d '[:space:]' | awk '{print $1 % 11}')
           RANDOM_HASH=$(od -An -N7 -tx1 /dev/urandom | tr -d ' \n')
           RANDOM_SUFFIX="${RANDOM_DIGIT}-o-g${RANDOM_HASH}"
-          if [ "$KERNEL_VERSION" = "6.12" ]; then
+          if [ "$KERNEL_VERSION" = "6.6" ]; then
+            GIT_PART=$(od -An -N6 -tx1 /dev/urandom | tr -d ' \n')
+            AB_PART=$(printf "%08d" $(( $(od -An -N4 -tu4 /dev/urandom) % 100000000 )))
+            RANDOM_SUFFIX="8-g${GIT_PART}-ab${AB_PART}-4k"
+          elif [ "$KERNEL_VERSION" = "6.12" ]; then
             GIT_PART=$(od -An -N6 -tx1 /dev/urandom | tr -d ' \n')
             AB_PART=$(printf "%08d" $(( $(od -An -N4 -tu4 /dev/urandom) % 100000000 )))
             RANDOM_SUFFIX="5-g${GIT_PART}-ab${AB_PART}-4k"
@@ -516,11 +524,11 @@ jobs:
           cd kernel_workspace/kernel_platform
           
           echo "正在配置ReSukiSU..."
-          curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/refs/heads/main/kernel/setup.sh" | bash -s main
+          curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/refs/heads/main/kernel/setup.sh" | bash -s 6ee2f7fd
           echo 'CONFIG_KSU_FULL_NAME_FORMAT="%TAG_NAME%-%COMMIT_SHA%@vring"' >> ./common/arch/arm64/configs/gki_defconfig
           cd ./KernelSU
           # 生成自定义版本号（基于提交计数）, 失败时使用 114514
-          KSU_VERSION=$(expr $(git rev-list --count main) + 30700 2>/dev/null || echo 114514)
+          KSU_VERSION=$(expr $(git rev-list --count 6ee2f7fd) + 30700 2>/dev/null || echo 114514)
           # 存储版本号到 GitHub 环境变量
           echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
           echo "ksuver=$KSU_VERSION" >> $GITHUB_OUTPUT
