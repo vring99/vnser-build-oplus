@@ -528,7 +528,7 @@ jobs:
         run: |
           cd kernel_workspace/kernel_platform
           
-          echo "正在配置ReSukiSU..." 
+          echo "正在配置ReSukiSU..."
           curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/refs/heads/main/kernel/setup.sh" | bash -s main
           echo 'CONFIG_KSU_FULL_NAME_FORMAT="%TAG_NAME%-%COMMIT_SHA%@vring"' >> ./common/arch/arm64/configs/gki_defconfig
           cd ./KernelSU
@@ -555,7 +555,7 @@ jobs:
           #  git checkout 9bf72ec2
           #elif [ "$SUSFS_BRANCH" = "gki-android15-6.6" ]; then
           #  git checkout 2df41de7
-         # elif [ "$SUSFS_BRANCH" = "gki-android16-6.12" ]; then
+          # elif [ "$SUSFS_BRANCH" = "gki-android16-6.12" ]; then
           #  git checkout 75a61385
           #else
           #  echo "No specific commit for this"
