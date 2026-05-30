@@ -30,4 +30,4 @@ jobs:
       FAST_BUILD: true
       KPM: ${{ matrix.kpm }}
       IPV6: ${{ matrix.ipv6 }}
-      DISABLE_ROOT_FEATURES: false
+
