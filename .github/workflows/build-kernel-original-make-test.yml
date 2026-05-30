@@ -677,6 +677,8 @@ jobs:
           # TMPFS配置*
           echo "CONFIG_TMPFS_XATTR=y" >> "$CONFIG_FILE"
           echo "CONFIG_TMPFS_POSIX_ACL=y" >> "$CONFIG_FILE"
+          echo "CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE=y" >> "$CONFIG_FILE"
+          echo "CONFIG_HEADERS_INSTALL=n" >> "$CONFIG_FILE"
           
           
           # ZRAM配置*
@@ -724,9 +726,7 @@ jobs:
           fi
           
           # 修复构建问题
-          if [ "$KERNEL_VERSION" = "6.1" ] && [[ "$CPU" == mt* ]]; then
-            echo "CONFIG_DEBUG_INFO_BTF=n" >> "$CONFIG_FILE"
-          fi
+          # MTK 6.1 使用 cctv 134 开机版配置，不额外强制关闭 DEBUG_INFO_BTF。
           if [[ "$ENABLE_RUST" == "true" ]]; then
             echo "CONFIG_RUST=y" >> "$CONFIG_FILE"
             echo "CONFIG_ANDROID_BINDER_IPC_RUST=m" >> "$CONFIG_FILE"
@@ -840,7 +840,7 @@ jobs:
           echo "======================================="
           make -j$(nproc --all) LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" LD="ld.lld" HOSTLD=ld.lld O=out KCFLAGS+=-O2 KCFLAGS+=-Wno-error gki_defconfig
           echo "========== Defconfig Debug =========="
-          grep -E '^(CONFIG_LOCALVERSION|CONFIG_LTO_CLANG|CONFIG_LTO_CLANG_NONE|CONFIG_LTO_CLANG_THIN|CONFIG_MODULES|CONFIG_MODVERSIONS|CONFIG_RUST|CONFIG_KPM|CONFIG_KSU|CONFIG_KSU_SUSFS|CONFIG_CFG80211|CONFIG_WLAN)=' out/.config || true
+          grep -E '^(CONFIG_LOCALVERSION|CONFIG_LTO_CLANG|CONFIG_LTO_CLANG_NONE|CONFIG_LTO_CLANG_THIN|CONFIG_MODULES|CONFIG_MODVERSIONS|CONFIG_RUST|CONFIG_KPM|CONFIG_KSU|CONFIG_KSU_SUSFS|CONFIG_CFG80211|CONFIG_WLAN|CONFIG_BBG|CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE|CONFIG_HEADERS_INSTALL|CONFIG_DEBUG_INFO_BTF)=' out/.config || true
           echo "====================================="
           make -j$(nproc --all) LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="$(pwd)/cc-wrapper" LD="$(pwd)/ld-wrapper" HOSTLD=ld.lld O=out KCFLAGS+=-O2 KCFLAGS+=-Wno-error Image
           echo "========== Image Debug =========="

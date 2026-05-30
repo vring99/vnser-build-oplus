@@ -12,7 +12,7 @@ jobs:
       matrix:
         include:
           - file: oneplus_ace5_race_b
-            kpm: false
+            kpm: true
             sched: false
             ipv6: false
 
@@ -26,7 +26,8 @@ jobs:
       BUILD_TIME:  "Mon Aug 18 09:30:24 UTC 2024"
       SCHED: ${{ matrix.sched }}
       ZRAM: false
-      LSM: false
+      LSM: true
       FAST_BUILD: true
       KPM: ${{ matrix.kpm }}
       IPV6: ${{ matrix.ipv6 }}
+      DISABLE_ROOT_FEATURES: false
