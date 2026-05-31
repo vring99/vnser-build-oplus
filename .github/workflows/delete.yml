@@ -9,10 +9,9 @@ on:
         required: true
         default: 'Build OnePlus_SukiSU Ultra All'
         options:
-          - Build OnePlus_SukiSU Ultra All
-          - CAll Build Start UP
-          - Build TEST
-          - Build TEST2
+          - oplus-resukisu-vring-mtk
+          - oplus-resukisu-vring-snapdragon
+          - oplus-resukisu-vring-TEST
       count:
         description: '最多访问的运行次数'
         required: false
