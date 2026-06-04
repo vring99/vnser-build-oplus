@@ -11,11 +11,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - file: oneplus_pad2_mt6991_v
-            kpm: true
-            sched: false
-            ipv6: false
-          - file: oneplus_ace5_ultra
+          - file: oneplus_ace5___b
             kpm: true
             sched: false
             ipv6: false
