@@ -417,7 +417,7 @@ jobs:
             GIT_PART=$(od -An -N6 -tx1 /dev/urandom | tr -d ' \n')
             VERSION_SUFFIX="9-o-g${GIT_PART}"
           elif [ "$KERNEL_VERSION" = "5.15" ]; then
-            O_PART=$(printf "%05d" $(( $(od -An -N4 -tu4 /dev/urandom) % 100000 )))
+            O_PART=$(printf "%05d" $(( $(od -An -N4 -tu4 /dev/urandom) % 3000 )))
             GIT_PART=$(od -An -N6 -tx1 /dev/urandom | tr -d ' \n')
             VERSION_SUFFIX="8-o-${O_PART}-g${GIT_PART}"
           elif [ "$KERNEL_VERSION" = "6.1" ]; then
