@@ -13,11 +13,11 @@ jobs:
         include:
           - file: oneplus_pad2_mt6991_v
             kpm: true
-            sched: true
+            sched: false
             ipv6: false
           - file: oneplus_ace5_ultra
             kpm: true
-            sched: true
+            sched: false
             ipv6: false
 
     #uses: ./.github/workflows/build-kernel-original-make-test.yml
