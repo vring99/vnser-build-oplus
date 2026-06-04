@@ -11,7 +11,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - file: oneplus_ace5___b
+          - file: oneplus_ace5_118
             kpm: true
             sched: false
             ipv6: false
