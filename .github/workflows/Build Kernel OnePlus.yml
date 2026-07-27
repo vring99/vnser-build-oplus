@@ -903,7 +903,7 @@ jobs:
 
       - name: Fix IPv6_NAT Error
         run: |
-          PATCH_DIR="${GITHUB_WORKSPACE}/kernel_workspace/Action-Build/patches"
+          PATCH_DIR="${GITHUB_WORKSPACE}/kernel_workspace/vnser-build-oplus/patches"
           cd kernel_workspace/kernel_platform/common
           # IPSET & IPv6_NAT配置*
           IPV6="${{ inputs.IPV6 }}"
