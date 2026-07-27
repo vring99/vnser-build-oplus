@@ -11,11 +11,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - file: oneplus_ace5_118
+          - file: oneplus_ace2_pro_b
             kpm: true
             sched: false
-            ipv6: false
+            ipv6: true
 
+          - file: oneplus_15t_Canary
+            kpm: true
+            sched: false
+            ipv6: true
     #uses: ./.github/workflows/build-kernel-original-make-test.yml
     uses: ./.github/workflows/build-kernel-original-make.yml
     secrets: inherit
