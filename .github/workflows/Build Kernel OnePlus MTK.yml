@@ -56,7 +56,7 @@ jobs:
             ipv6: false
 
           - file: oneplus_pad2_mt6991_v
-            sched: true
+            sched: false
             ipv6: false
 
 
