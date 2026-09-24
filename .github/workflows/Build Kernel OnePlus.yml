@@ -670,18 +670,8 @@ jobs:
               sed -i '/#include <linux\/dma-buf.h>/a #include <linux\/susfs.h>' ./fs/proc/base.c
             fi
             if [[ "$CURRENT_SUB" -le 128 ]]; then
-              sed -i -e 's/goto show_pad;/return 0;/' ./fs/proc/task_mmu.c
-            fi
-            # SUSFS 补丁可能只引入 pgsize_migration_inline.h，导致 VMA_PAD_START()
-            # 使用的 vma_pad_pages() 没有声明；补入完整接口头文件。
-            if grep -qF 'VMA_PAD_START(vma)' ./fs/proc/task_mmu.c && ! grep -qF '#include <linux/pgsize_migration.h>' ./fs/proc/task_mmu.c; then
-              if grep -qF '#include <linux/pgsize_migration_inline.h>' ./fs/proc/task_mmu.c; then
-                sed -i 's|#include <linux/pgsize_migration_inline.h>|#include <linux/pgsize_migration.h>|' ./fs/proc/task_mmu.c
-              elif grep -qF '#include <linux/pagewalk.h>' ./fs/proc/task_mmu.c; then
-                sed -i '/#include <linux\/pagewalk.h>/a #include <linux/pgsize_migration.h>' ./fs/proc/task_mmu.c
-              else
-                sed -i '1i#include <linux/pgsize_migration.h>' ./fs/proc/task_mmu.c
-              fi
+              # 6.1.128 及以下没有 vma_pad_pages() 的实现，直接使用 VMA 末尾。
+              sed -i -e 's/goto show_pad;/return 0;/' -e 's/VMA_PAD_START(vma)/vma->vm_end/g' ./fs/proc/task_mmu.c
             fi
           fi
           
