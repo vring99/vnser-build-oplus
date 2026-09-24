@@ -32,6 +32,5 @@ jobs:
       ZRAM: false
       LSM: true
       FAST_BUILD: true
-      KPM: ${{ matrix.kpm }}
       IPV6: ${{ matrix.ipv6 }}
 
