@@ -248,7 +248,7 @@ jobs:
       - name: Install Dependencies + APTC
         uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: python3 git curl ccache libelf-dev build-essential flex bison libssl-dev libncurses-dev liblz4-tool zlib1g-dev libxml2-utils rsync unzip gawk dos2unix kmod libdw-dev elfutils
+          packages: python3 git curl ccache libelf-dev build-essential flex bison libssl-dev libncurses-dev liblz4-tool zlib1g-dev libxml2-utils rsync unzip gawk kmod libdw-dev elfutils
           execute_install_scripts: true
 
 
@@ -776,7 +776,7 @@ jobs:
            cp ./SCHED_PATCH/fengchi_${FILE}.patch ./
           if [[ -f "fengchi_${FILE}.patch" ]]; then
             echo "正在打风驰补丁"
-            dos2unix "fengchi_${FILE}.patch"
+            sed -i 's/\r$//' "fengchi_${FILE}.patch"
             patch -p1 -F 3 < "fengchi_${FILE}.patch" || true
             echo "fengchi_patch完成"
           else
