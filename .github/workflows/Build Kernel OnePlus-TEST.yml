@@ -11,11 +11,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - file: oneplus_ace2_pro_b
-            kpm: true
-            sched: false
+          - file: oneplus_ace_6
+            sched: true
             ipv6: true
-
+            kpm: true
           - file: oneplus_15t_Canary
             kpm: true
             sched: false
