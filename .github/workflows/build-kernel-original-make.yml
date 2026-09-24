@@ -822,6 +822,18 @@ jobs:
           if [ "$FILE" == "oneplus_ace5_ultra_b_vring" ]; then   
               FILE="oneplus_ace_6"
           fi
+          if [ "$FILE" == "oneplus_pad_2_pro_89_b" ]; then   
+              FILE="oneplus_pad_2_pro_b"
+          fi 
+          if [ "$FILE" == "oneplus_ace5_pro_89_b" ]; then   
+              FILE="oneplus_ace5_pro_b"
+          fi  
+          if [ "$FILE" == "oneplus_ace5_ultra_b_vring_89" ]; then   
+              FILE="oneplus_ace_6"
+          fi    
+          if [ "$FILE" == "oneplus_ace_6_89" ]; then   
+              FILE="oneplus_ace_6"
+          fi
            cp ./SCHED_PATCH/fengchi_${FILE}.patch ./
           if [[ -f "fengchi_${FILE}.patch" ]]; then
             echo "正在打风驰补丁"
