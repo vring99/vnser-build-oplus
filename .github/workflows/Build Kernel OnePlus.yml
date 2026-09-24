@@ -59,11 +59,6 @@ on:
         description: "是否添加更多ZRAM算法？"
         required: true
         default: false
-      KPM:
-        type: boolean
-        description: "是否启用内核模块(KPM)？"
-        required: true
-        default: true
       IPV6:
         type: boolean
         description: "是否优化ipv6？"
@@ -71,7 +66,7 @@ on:
         default: true
 jobs:
   load:
-    name: ${{ inputs.SCHED  && ' [SCHED]' || '' }}${{ inputs.LSM  && ' [LSM]' || '' }}${{ inputs.KPM && ' [KPM]' || '' }}For ${{ inputs.FILE }} ${{ inputs.SUFFIX }}
+    name: ${{ inputs.SCHED  && ' [SCHED]' || '' }}${{ inputs.LSM  && ' [LSM]' || '' }}For ${{ inputs.FILE }} ${{ inputs.SUFFIX }}
     runs-on: ubuntu-latest
     env:
       CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
@@ -224,7 +219,6 @@ jobs:
           echo "Selected FAST_BUILD: ${{ inputs.FAST_BUILD }}"
           echo "Selected SCHED: ${{ inputs.SCHED }}"
           echo "Selected ZRAM: ${{ inputs.ZRAM }}"
-          echo "Selected KPM: ${{ inputs.KPM }}"
           echo "-----------------------"
 
       - name: Check Disk Space
@@ -623,11 +617,16 @@ jobs:
           
           if [[ "$GKI_V" == "android12-5.10" ]]; then
               if [[ "$CURRENT_SUB" -le 209 ]]; then
-                sed -i -e 's/goto show_pad;/return 0;/' ./fs/proc/task_mmu.c
+                # 5.10.209 及以下没有 VMA_PAD_START()，直接使用 VMA 末尾
+                sed -i -e 's/goto show_pad;/return 0;/' -e 's/VMA_PAD_START(vma)/vma->vm_end/g' ./fs/proc/task_mmu.c
               fi
               if [[ "$CURRENT_SUB" -le 117 ]]; then
                 cp $KERNEL_PATCHES/wild/archived/susfs_fix_patches/v${SUSFS_VERSION}/a12-5.10/fdinfo.c.patch ./
                 patch -p1 < fdinfo.c.patch || true
+                # 旧版 5.10 的 fdinfo.c 没有预先声明 mnt
+                if grep -qF 'mnt = real_mount(file->f_path.mnt);' ./fs/notify/fdinfo.c && ! grep -qF 'struct mount *mnt;' ./fs/notify/fdinfo.c; then
+                  sed -i '/mnt = real_mount(file->f_path.mnt);/i\	struct mount *mnt;' ./fs/notify/fdinfo.c
+                fi
               fi
               if [[ "$CURRENT_SUB" -le 43 ]]; then
                 cp $KERNEL_PATCHES/wild/archived/susfs_fix_patches/v${SUSFS_VERSION}/a12-5.10/base.c.patch ./
@@ -707,6 +706,19 @@ jobs:
               sed -i '/#include <linux\/dma-buf.h>/a \
               #if defined(CONFIG_KSU_SUSFS_SUS_MAP) || defined(CONFIG_KSU_SUSFS_OPEN_REDIRECT)\n#include <linux/susfs_def.h>\n#endif' fs/proc/base.c
           
+            fi
+          fi
+
+          # Android 16 - 6.12 修复
+          if [[ "$GKI_V" == "android16-6.12" ]]; then
+            # 6.12.58 及以上的 exec.c 可能缺少 SUSFS 头文件，导致 no_su 等函数未声明
+            if [[ "$CURRENT_SUB" -ge 58 ]] && grep -q 'susfs_is_current_proc_umounted\|susfs_is_current_proc_no_su' ./fs/exec.c && ! grep -qF '#include <linux/susfs_def.h>' ./fs/exec.c; then
+              if grep -qF '#include <linux/dma-buf.h>' ./fs/exec.c; then
+                sed -i '/#include <linux\/dma-buf.h>/a #ifdef CONFIG_KSU_SUSFS\n#include <linux\/susfs_def.h>\n#endif' ./fs/exec.c
+              else
+                sed -i '/#include <linux\/ksm.h>/a #ifdef CONFIG_KSU_SUSFS\n#include <linux\/susfs_def.h>\n#endif' ./fs/exec.c
+              fi
+              echo "已修复 6.12 exec.c 缺少 susfs_def.h 问题"
             fi
           fi
 
@@ -808,7 +820,7 @@ jobs:
           echo "CONFIG_KSU=y" >> "$CONFIG_FILE"
           
           # KPM配置
-          echo "CONFIG_KPM=y" >> "$CONFIG_FILE"
+          # echo "CONFIG_KPM=y" >> "$CONFIG_FILE"
           
           # HOOK配置
           
@@ -1130,30 +1142,15 @@ jobs:
 
 
 
-      - name: Apply patch_linux and replace Image
-        if: ${{ inputs.KPM }}
-        run: |
-          cd kernel_workspace/kernel_platform/out/Final-Image-Find
-          #curl -LO --retry 5 --retry-delay 2 --retry-connrefused https://raw.githubusercontent.com/Numbersf/Action-Build/SukiSU-Ultra/patches/patch_linux
-          curl -LO --retry 5 --retry-delay 2 --retry-connrefused https://github.com/SukiSU-Ultra/SukiSU_KernelPatch_patch/releases/latest/download/patch_linux
-          chmod +x patch_linux
-          ./patch_linux
-          rm -f Image
-          mv oImage Image
-          cp Image $GITHUB_WORKSPACE/AnyKernel3/Image
-
-
-
       - name: Set zip Suffix
         id: suffix
         run: |
-          echo "value=${{ inputs.LSM && '_LSM' || '' }}${{ inputs.SCHED && '_SCHED' || '' }}${{ inputs.KPM  && '_KPM' || '' }}" >> $GITHUB_OUTPUT
-          echo "kpm=${{ ! inputs.KPM  && 'nkpm' || '' }}" >> $GITHUB_OUTPUT
+          echo "value=${{ inputs.LSM && '_LSM' || '' }}${{ inputs.SCHED && '_SCHED' || '' }}" >> $GITHUB_OUTPUT
 
       - name: Upload AnyKernel3
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.KSUVER }}${{ steps.suffix.outputs.kpm }}-${{ steps.extract_info.outputs.value }}-${{ env.TKERNEL_VERSION }}${{ steps.suffix.outputs.value }}
+          name: ${{ env.KSUVER }}-${{ steps.extract_info.outputs.value }}-${{ env.TKERNEL_VERSION }}${{ steps.suffix.outputs.value }}
           path: ./AnyKernel3/*
 
       - name: Download and Unzip ZRAM

@@ -12,7 +12,6 @@ jobs:
       matrix:
         include:
           - file: oneplus_ace5_118
-            kpm: true
             sched: false
             ipv6: false
 
@@ -29,6 +28,5 @@ jobs:
       ZRAM: false
       LSM: true
       FAST_BUILD: true
-      KPM: ${{ matrix.kpm }}
       IPV6: ${{ matrix.ipv6 }}
 
