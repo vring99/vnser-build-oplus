@@ -140,6 +140,10 @@ jobs:
             sched: true
             ipv6: true
 
+          - file: oneplus_ace5_pro_89_b
+            sched: true
+            ipv6: true
+
 
 
 
@@ -149,6 +153,9 @@ jobs:
             ipv6: true
 
           - file: oneplus_pad_2_pro_b
+            sched: true
+            ipv6: true
+          - file: oneplus_pad_2_pro_89_b
             sched: true
             ipv6: true
 
@@ -187,6 +194,10 @@ jobs:
             ipv6: true
 
           - file: oneplus_ace_6
+            sched: true
+            ipv6: true
+
+          - file: oneplus_ace_6_89
             sched: true
             ipv6: true
 

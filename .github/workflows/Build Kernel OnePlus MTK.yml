@@ -41,6 +41,9 @@ jobs:
           - file: oneplus_ace5_ultra_b_vring
             sched: true
             ipv6: false
+          - file: oneplus_ace5_ultra_b_vring_89
+            sched: true
+            ipv6: false
 
           - file: oneplus_ace5_ultra
             sched: true
