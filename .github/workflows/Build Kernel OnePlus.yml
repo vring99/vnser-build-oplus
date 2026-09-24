@@ -672,6 +672,17 @@ jobs:
             if [[ "$CURRENT_SUB" -le 128 ]]; then
               sed -i -e 's/goto show_pad;/return 0;/' ./fs/proc/task_mmu.c
             fi
+            # SUSFS 补丁可能只引入 pgsize_migration_inline.h，导致 VMA_PAD_START()
+            # 使用的 vma_pad_pages() 没有声明；补入完整接口头文件。
+            if grep -qF 'VMA_PAD_START(vma)' ./fs/proc/task_mmu.c && ! grep -qF '#include <linux/pgsize_migration.h>' ./fs/proc/task_mmu.c; then
+              if grep -qF '#include <linux/pgsize_migration_inline.h>' ./fs/proc/task_mmu.c; then
+                sed -i 's|#include <linux/pgsize_migration_inline.h>|#include <linux/pgsize_migration.h>|' ./fs/proc/task_mmu.c
+              elif grep -qF '#include <linux/pagewalk.h>' ./fs/proc/task_mmu.c; then
+                sed -i '/#include <linux\/pagewalk.h>/a #include <linux/pgsize_migration.h>' ./fs/proc/task_mmu.c
+              else
+                sed -i '1i#include <linux/pgsize_migration.h>' ./fs/proc/task_mmu.c
+              fi
+            fi
           fi
           
           # Android 15 - 6.6 修复
@@ -779,6 +790,20 @@ jobs:
             echo "正在打风驰补丁"
             sed -i 's/\r$//' "fengchi_${FILE}.patch"
             patch -p1 -F 3 < "fengchi_${FILE}.patch" || true
+            # 部分 6.6 风驰补丁混用了不同基线，可能删除 group 声明但保留其调用。
+            GKI_V="${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}"
+            if [[ "$GKI_V" == "android15-6.6" && "${{ env.TKERNEL_VERSION }}" == 6.6.50 ]] &&
+               grep -qF 'static void sched_change_group(struct task_struct *tsk, struct task_group *group)' ./kernel/sched/core.c &&
+               grep -qF 'group = sched_get_task_group(tsk);' ./kernel/sched/core.c; then
+              if ! sed -n '/void sched_move_task(struct task_struct \*tsk)/,/struct rq_flags rf;/p' ./kernel/sched/core.c | grep -qF 'struct task_group *group;'; then
+                sed -i '/void sched_move_task(struct task_struct \*tsk)/,/struct rq_flags rf;/ {
+                  /struct rq_flags rf;/i\
+                    struct task_group *group;
+                }' ./kernel/sched/core.c
+              fi
+              sed -i '/void sched_move_task(struct task_struct \*tsk)/,/task_rq_unlock/ s/sched_change_group(tsk);/sched_change_group(tsk, group);/' ./kernel/sched/core.c
+              echo "已修复 6.6 SCHED 补丁的 task_group 声明兼容性"
+            fi
             echo "fengchi_patch完成"
           else
             echo "❌ 未匹配到补丁，风驰内核暂未支持你的机型，请关闭后重试"

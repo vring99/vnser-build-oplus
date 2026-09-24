@@ -14,9 +14,7 @@ jobs:
           - file: oneplus_ace_6
             sched: true
             ipv6: true
-            kpm: true
           - file: oneplus_15t_Canary
-            kpm: true
             sched: false
             ipv6: true
     #uses: ./.github/workflows/build-kernel-original-make-test.yml
