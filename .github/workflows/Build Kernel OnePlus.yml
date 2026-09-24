@@ -270,7 +270,8 @@ jobs:
             python3 git curl ccache libelf-dev \
             build-essential flex bison libssl-dev \
             libncurses-dev liblz4-tool zlib1g-dev \
-            libxml2-utils rsync unzip
+            libxml2-utils rsync unzip gawk kmod libdw-dev elfutils
+          test -r /usr/include/dwarf.h || { echo "libdw-dev 安装异常: /usr/include/dwarf.h 不存在"; exit 1; }
 
       - name: Restore Ccache
         uses: actions/cache@v3
