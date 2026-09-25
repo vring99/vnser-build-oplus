@@ -11,19 +11,26 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - file: oneplus_ace5_ultra_b_vring_89
-            sched: true
-            ipv6: false
-          - file: oneplus_ace5_pro_89_b
-            sched: true
-            ipv6: false
-          - file: oneplus_ace_6_89
-            sched: true
-            ipv6: false
-          - file: oneplus_pad_2_pro_89_b
-            sched: true
+          - file: oneplus_ace5_race_134
+            sched: false
             ipv6: false
 
+          - file: oneplus_ace5_141
+            sched: false
+            ipv6: true
+          - file: oneplus_ace3_pro_141
+            sched: false
+            ipv6: true
+
+          - file: oneplus_pad2_118
+            sched: false
+            ipv6: true
+          - file: oneplus_12_141
+            sched: false
+            ipv6: true
+          - file: oneplus_ace_3v_141
+            sched: false
+            ipv6: true
 
     #uses: ./.github/workflows/build-kernel-original-make-test.yml
     uses: ./.github/workflows/build-kernel-original-make.yml
