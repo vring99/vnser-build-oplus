@@ -11,24 +11,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - file: oneplus_ace5_race_134
-            sched: false
-            ipv6: false
 
-          - file: oneplus_ace5_141
-            sched: false
-            ipv6: true
-          - file: oneplus_ace3_pro_141
-            sched: false
-            ipv6: true
-
-          - file: oneplus_pad2_118
-            sched: false
-            ipv6: true
-          - file: oneplus_12_141
-            sched: false
-            ipv6: true
-          - file: oneplus_ace_3v_141
+          - file: oneplus_ace3_pro_118
             sched: false
             ipv6: true
 
