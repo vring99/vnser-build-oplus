@@ -79,6 +79,9 @@ jobs:
           - file: oneplus_ace_3v_141
             sched: false
             ipv6: true
+          - file: oneplus_ace_3v_118
+            sched: false
+            ipv6: true
 
 
           - file: oneplus_12_v

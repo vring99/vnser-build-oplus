@@ -12,7 +12,7 @@ jobs:
       matrix:
         include:
 
-          - file: oneplus_ace3_pro_118
+          - file: oneplus_ace_3v_118
             sched: false
             ipv6: true
 
