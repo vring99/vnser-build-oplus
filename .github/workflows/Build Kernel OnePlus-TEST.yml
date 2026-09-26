@@ -12,9 +12,17 @@ jobs:
       matrix:
         include:
 
-          - file: oneplus_ace_3v_118
+          - file: oneplus_pad2pro_30
             sched: false
             ipv6: true
+          - file: oneplus_ace_race_149
+            sched: false
+            ipv6: false
+          - file: oneplus_ace_race_209
+            sched: false
+            ipv6: false
+          - file: oneplus_ace_race_226
+            sched: false
 
     #uses: ./.github/workflows/build-kernel-original-make-test.yml
     uses: ./.github/workflows/build-kernel-original-make.yml

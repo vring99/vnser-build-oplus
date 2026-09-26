@@ -23,6 +23,18 @@ jobs:
           - file: oneplus_ace_race_u
             sched: false
             ipv6: false
+          - file: oneplus_ace_race_149
+            sched: false
+            ipv6: false
+          - file: oneplus_ace_race_209
+            sched: false
+            ipv6: false
+          - file: oneplus_ace_race_226
+            sched: false
+            ipv6: false
+
+
+
           - file: oneplus_ace_2v_v
             sched: false
             ipv6: false

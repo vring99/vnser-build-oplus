@@ -179,6 +179,9 @@ jobs:
           - file: oneplus_pad_2_pro_89_b
             sched: true
             ipv6: true
+          - file: oneplus_pad2pro_30
+            sched: true
+            ipv6: true
 
           - file: oneplus_13
             sched: true
