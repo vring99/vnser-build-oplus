@@ -126,6 +126,9 @@ jobs:
           #  sched: false
           #  ipv6: true
 
+          - file: oneplus_ace5_118
+            sched: false
+            ipv6: true
           - file: oneplus_ace5_141
             sched: false
             ipv6: true
@@ -226,6 +229,10 @@ jobs:
             ipv6: true
 
           - file: oneplus_turbo_6v
+            sched: false
+            ipv6: true
+
+          - file: oneplus_turbo_6v_118
             sched: false
             ipv6: true
 
