@@ -29,6 +29,10 @@ jobs:
           - file: oneplus_ace5_141
             sched: false
             ipv6: true
+
+          - file: oneplus_ace6_ultra_vring
+            sched: false
+            ipv6: false
     #uses: ./.github/workflows/build-kernel-original-make-test.yml
     uses: ./.github/workflows/build-kernel-original-make.yml
     secrets: inherit

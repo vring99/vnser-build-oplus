@@ -893,6 +893,14 @@ jobs:
           
           # SukiSU Ultra配置
           echo "CONFIG_KSU=y" >> "$CONFIG_FILE"
+
+          # 仅对一加 Ace 6 至尊测试构建阻止 inte 模块加载，保留 bootloader 原有参数。
+          if [[ "${{ inputs.FILE }}" == "oneplus_ace6_ultra_vring" ]]; then
+            sed -i -E '/^CONFIG_CMDLINE=/d; /^CONFIG_CMDLINE_(FROM_BOOTLOADER|EXTEND|FORCE)=/d' "$CONFIG_FILE"
+            echo 'CONFIG_CMDLINE="module_blacklist=inte"' >> "$CONFIG_FILE"
+            echo 'CONFIG_CMDLINE_EXTEND=y' >> "$CONFIG_FILE"
+            echo "已为 ${{ inputs.FILE }} 写入 boot 启动参数：module_blacklist=inte"
+          fi
           
           # KPM配置
           # echo "CONFIG_KPM=y" >> "$CONFIG_FILE"
@@ -1166,6 +1174,10 @@ jobs:
           fi
 
           make -j"$(nproc --all)" LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="clang" HOSTCC="clang" LD="ld.lld" HOSTLD="ld.lld" OBJCOPY="llvm-objcopy" O=out olddefconfig
+          if [[ "${{ inputs.FILE }}" == "oneplus_ace6_ultra_vring" ]]; then
+            grep -F 'CONFIG_CMDLINE="module_blacklist=inte"' out/.config
+            grep -F 'CONFIG_CMDLINE_EXTEND=y' out/.config
+          fi
           echo "========== Olddefconfig Debug =========="
           grep -E '^(CONFIG_LOCALVERSION|CONFIG_LTO_CLANG|CONFIG_LTO_CLANG_NONE|CONFIG_LTO_CLANG_THIN|CONFIG_MODULES|CONFIG_MODVERSIONS|CONFIG_RUST|CONFIG_KPM|CONFIG_KSU|CONFIG_KSU_SUSFS|CONFIG_CFG80211|CONFIG_WLAN)=' out/.config || true
           echo "========================================"
