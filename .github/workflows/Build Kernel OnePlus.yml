@@ -834,6 +834,12 @@ jobs:
           
           # SukiSU Ultra配置
           echo "CONFIG_KSU=y" >> "$CONFIG_FILE"
+
+          # 所有一加构建阻止 inte 模块加载，保留 bootloader 原有参数。
+          sed -i -E '/^CONFIG_CMDLINE=/d; /^CONFIG_CMDLINE_(FROM_BOOTLOADER|EXTEND|FORCE)=/d' "$CONFIG_FILE"
+          echo 'CONFIG_CMDLINE="module_blacklist=inte"' >> "$CONFIG_FILE"
+          echo 'CONFIG_CMDLINE_EXTEND=y' >> "$CONFIG_FILE"
+          echo "已为 ${{ inputs.FILE }} 写入 boot 启动参数：module_blacklist=inte"
           
           # KPM配置
           # echo "CONFIG_KPM=y" >> "$CONFIG_FILE"
@@ -1086,6 +1092,8 @@ jobs:
             scripts/config --file out/.config -d LTO_CLANG_FULL
           fi
           make O=out "${MAKE_ARGS[@]}" olddefconfig
+          grep -F 'CONFIG_CMDLINE="module_blacklist=inte"' out/.config
+          grep -F 'CONFIG_CMDLINE_EXTEND=y' out/.config
           make -j"$(nproc --all)" O=out "${MAKE_ARGS[@]}"
           ccache -s
 
