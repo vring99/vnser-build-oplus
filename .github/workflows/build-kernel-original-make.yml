@@ -69,6 +69,7 @@ jobs:
     name: ${{ inputs.SCHED  && ' [SCHED]' || '' }}${{ inputs.LSM  && ' [LSM]' || '' }}For ${{ inputs.FILE }} ${{ inputs.SUFFIX }}
     runs-on: ubuntu-latest
     env:
+      BAKASU_COMMIT: 59afa46b325126b12a48234063cd0c2a6b735b57
       CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
       CCACHE_NOHASHDIR: "true"
       CCACHE_HARDLINK: "true"
@@ -539,16 +540,23 @@ jobs:
           done
           
 
-      - name: Add ReSukiSU
+      - name: Add BakaSU 35226
         run: |
           cd kernel_workspace/kernel_platform
-          
-          echo "正在配置ReSukiSU..."
-          curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/refs/heads/main/kernel/setup.sh" | bash -s 6803643e
+
+          echo "正在配置 BakaSU 35226..."
+          curl -fLSs "https://raw.githubusercontent.com/Baka-SU/BakaSU/$BAKASU_COMMIT/kernel/setup.sh" -o "$RUNNER_TEMP/bakasu-setup.sh"
+          bash "$RUNNER_TEMP/bakasu-setup.sh" "$BAKASU_COMMIT"
+          if [ "$(git -C KernelSU rev-parse HEAD)" != "$BAKASU_COMMIT" ]; then
+            echo "::error::BakaSU checkout does not match pinned commit $BAKASU_COMMIT"
+            exit 1
+          fi
+          python3 "$GITHUB_WORKSPACE/scripts/bakasu_selinux.py" check-source --ksu "$PWD/KernelSU"
           echo 'CONFIG_KSU_FULL_NAME_FORMAT="%TAG_NAME%-%COMMIT_SHA%@R"' >> ./common/arch/arm64/configs/gki_defconfig
           cd ./KernelSU
-          # 生成自定义版本号（基于提交计数）, 失败时使用 114514 3f9c42e8-34933
-          KSU_VERSION=$(expr $(git rev-list --count 6803643e) + 30700 2>/dev/null || echo 114514)
+          # 使用实际检出的提交计数，避免 main 更新导致版本号漂移。
+          KSU_GIT_VERSION=$(git rev-list --count HEAD)
+          KSU_VERSION=$((KSU_GIT_VERSION + 30700))
           # 存储版本号到 GitHub 环境变量
           echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
           echo "ksuver=$KSU_VERSION" >> $GITHUB_OUTPUT
@@ -637,7 +645,10 @@ jobs:
           fi
           
           echo "正在打susfs补丁"
-          patch -p1 < 50_add_susfs_in_gki-${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}.patch || true
+          SUSFS_PATCH="50_add_susfs_in_gki-${GKI_V}.patch"
+          python3 "$GITHUB_WORKSPACE/scripts/bakasu_selinux.py" filter-susfs \
+            --family "$GKI_V" --patch "$SUSFS_PATCH" --output "${SUSFS_PATCH}.bakasu"
+          patch -p1 < "${SUSFS_PATCH}.bakasu" || true
           echo "susfs_patch完成"
           
           # Revert
@@ -1024,6 +1035,16 @@ jobs:
         run: |
           echo "Disabling GPUEB for MTK kernel 5.10"
           sed -i '/obj-y.*gpueb/d' kernel_workspace/kernel-5.10/drivers/gpu/mediatek/Makefile
+
+      - name: Validate BakaSU SUSFS integration
+        run: |
+          KERNEL_PLATFORM="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform"
+          "$KERNEL_PLATFORM/common/scripts/config" \
+            --file "$KERNEL_PLATFORM/common/arch/arm64/configs/gki_defconfig" \
+            --enable KALLSYMS --enable KALLSYMS_ALL
+          python3 "$GITHUB_WORKSPACE/scripts/bakasu_selinux.py" integrate \
+            --ksu "$KERNEL_PLATFORM/KernelSU" --common "$KERNEL_PLATFORM/common" \
+            --family "${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}" --susfs true
 
       - name: Build Kernel Repo Toolchain Make
         if: ${{ inputs.FAST_BUILD }}
