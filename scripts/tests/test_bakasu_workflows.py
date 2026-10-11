@@ -42,7 +42,7 @@ class WorkflowTests(unittest.TestCase):
                 self.assertIn('--susfs true', verify["run"])
                 self.assertIn('$GITHUB_WORKSPACE/scripts/bakasu_selinux.py', verify["run"])
                 runs = "\n".join(s.get("run", "") for s in steps)
-                self.assertNotIn('resukisu_35188_selinux.py', runs)
+                self.assertNotIn('bakasu_35188_selinux.py', runs)
                 self.assertIn('CONFIG_CMDLINE_EXTEND=y', runs)
                 self.assertIn('module_blacklist=inte', runs)
                 commands.append((setup["run"], verify["run"]))

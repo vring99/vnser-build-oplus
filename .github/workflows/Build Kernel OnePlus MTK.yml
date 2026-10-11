@@ -1,11 +1,11 @@
-name:  oplus-resukisu-vring-mtk
+name:  oplus-bakasu-vring-mtk
 
 on:
   workflow_dispatch:  # This allows this workflow to be called from another workflow
 
 
 jobs:
-  vring-resukisu-mtk:
+  vring-bakasu-mtk:
     name: "${{ matrix.file }}"
     strategy:
       fail-fast: false

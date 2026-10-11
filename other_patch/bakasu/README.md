@@ -9,9 +9,9 @@ The integration scripts and JSON manifests are copied from
 GKI_KernelSU_SUSFS. Keep these four files synchronized when updating:
 
 - `scripts/bakasu_selinux.py`
-- `scripts/resukisu_35188_selinux.py`
+- `scripts/bakasu_35188_selinux.py`
 - `config/bakasu.json`
-- `config/resukisu-35188-selinux.json`
+- `config/bakasu-35188-selinux.json`
 
 The historical helper is imported only for its shared patch filter, source
 validation and family manifest. These workflows do not invoke its old

@@ -1,11 +1,11 @@
-name: oplus-resukisu-vring-test
+name: oplus-bakasu-vring-test
 
 on:
   workflow_dispatch:  # This allows this workflow to be called from another workflow
 
 
 jobs:
-  vring-resukisu:
+  vring-bakasu:
     name: "${{ matrix.file }}"
     strategy:
       fail-fast: false

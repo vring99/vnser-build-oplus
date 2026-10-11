@@ -1,11 +1,11 @@
-name:  oplus-resukisu-vring-snapdragon
+name:  oplus-bakasu-vring-snapdragon
 
 on:
   workflow_dispatch:  # This allows this workflow to be called from another workflow
 
 
 jobs:
-  vring-resukisu-snapdragon:
+  vring-bakasu-snapdragon:
     name: "${{ matrix.file }}"
     strategy:
       fail-fast: false

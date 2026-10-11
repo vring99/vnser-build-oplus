@@ -7,11 +7,11 @@ on:
         type: choice
         description: '清理的工作流名称'
         required: true
-        default: 'Build OnePlus_SukiSU Ultra All'
+        default: 'oplus-bakasu-vring-mtk'
         options:
-          - oplus-resukisu-vring-mtk
-          - oplus-resukisu-vring-snapdragon
-          - oplus-resukisu-vring-TEST
+          - oplus-bakasu-vring-mtk
+          - oplus-bakasu-vring-snapdragon
+          - oplus-bakasu-vring-test
       count:
         description: '最多访问的运行次数'
         required: false
