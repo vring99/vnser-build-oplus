@@ -1,7 +1,22 @@
 name:  oplus-bakasu-vring-snapdragon
 
 on:
-  workflow_dispatch:  # This allows this workflow to be called from another workflow
+  workflow_dispatch:
+    inputs:
+      BAKASU_VERSION:
+        description: "BakaSU version"
+        required: false
+        type: choice
+        options:
+          - "35227"
+          - "35226"
+        default: "35227"
+  workflow_call:
+    inputs:
+      BAKASU_VERSION:
+        required: false
+        type: string
+        default: "35227"
 
 
 jobs:
@@ -264,6 +279,7 @@ jobs:
     secrets: inherit
     with:
       FILE: ${{ matrix.file }}
+      BAKASU_VERSION: ${{ inputs.BAKASU_VERSION || '35227' }}
       HOOK: "manual"
       SUSFS_CI: "CI"
       KSU_META: "susfs-main/vring/"

@@ -1,0 +1,27 @@
+name: oplus-bakasu-35226-susfs-all
+
+permissions:
+  contents: write
+  actions: write
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: oplus-bakasu-35226-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  snapdragon:
+    name: "BakaSU 35226 / Snapdragon"
+    uses: ./.github/workflows/Build Kernel OnePlus Snapdragon.yml
+    secrets: inherit
+    with:
+      BAKASU_VERSION: "35226"
+
+  mtk:
+    name: "BakaSU 35226 / MTK"
+    uses: ./.github/workflows/Build Kernel OnePlus MTK.yml
+    secrets: inherit
+    with:
+      BAKASU_VERSION: "35226"
