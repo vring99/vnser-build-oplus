@@ -19,11 +19,11 @@ class WorkflowTests(unittest.TestCase):
             with self.subTest(workflow=name):
                 workflow = yaml.safe_load((ROOT / ".github/workflows" / name).read_text(encoding="utf-8"))
                 job = workflow["jobs"]["load"]
-                self.assertEqual(job["env"]["BAKASU_COMMIT"], upstream.load_config()["commit"])
+                self.assertEqual(job["env"]["BAKASU_VERSION"], "${{ inputs.BAKASU_VERSION }}")
                 self.assertEqual(job["env"]["SUSFS_KSU_COMMIT"], upstream.load_config()["susfs_ksu_commit"])
                 self.assertNotIn("BAKASU_TOOLS_COMMIT", job["env"])
                 steps = job["steps"]
-                setup = next(s for s in steps if s["name"] == "Add BakaSU 35227")
+                setup = next(s for s in steps if s.get("id") == "bakasu_setup")
                 patch = next(s for s in steps if s["name"] == "Apply Patches SukiSU Ultra")
                 verify = next(s for s in steps if s.get("id") == "bakasu_susfs_setup")
                 build = next(s for s in steps if s.get("id") == "fast_build")

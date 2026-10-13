@@ -29,6 +29,11 @@ on:
         description: "分支名(必填)/自定义版本标识(留空不修改)/调整提交hash(留空不修改)"
         required: false
         default: "susfs-main/vring/"
+      BAKASU_VERSION:
+        type: string
+        description: "BakaSU version (35227 or 35226)"
+        required: false
+        default: "35227"
       BUILD_TIME:
         type: string
         description: "自定义构建时间 (输入F使用当前时间)"
@@ -69,13 +74,24 @@ jobs:
     name: ${{ inputs.SCHED  && ' [SCHED]' || '' }}${{ inputs.LSM  && ' [LSM]' || '' }}For ${{ inputs.FILE }} ${{ inputs.SUFFIX }}
     runs-on: ubuntu-latest
     env:
-      BAKASU_COMMIT: f4435f007b16f61705089ff982e3f981a6017979
+      BAKASU_VERSION: ${{ inputs.BAKASU_VERSION }}
       SUSFS_KSU_COMMIT: 0a1f3ff71719fa2d6ec15f5568dac27fdb957fcc
       CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
       CCACHE_NOHASHDIR: "true"
       CCACHE_HARDLINK: "true"
       CCACHE_MAXSIZE: 8G
     steps:
+      - name: Select BakaSU version
+        id: bakasu_version
+        run: |
+          case "$BAKASU_VERSION" in
+            35227) commit=f4435f007b16f61705089ff982e3f981a6017979 ;;
+            35226) commit=59afa46b325126b12a48234063cd0c2a6b735b57 ;;
+            *) echo "::error::Unsupported BakaSU version: $BAKASU_VERSION"; exit 1 ;;
+          esac
+          echo "BAKASU_COMMIT=$commit" >> "$GITHUB_ENV"
+          echo "BakaSU $BAKASU_VERSION: $commit"
+
       - name: Checkout
         uses: actions/checkout@v6
 
@@ -541,11 +557,12 @@ jobs:
           done
           
 
-      - name: Add BakaSU 35227
+      - name: Add BakaSU ${{ inputs.BAKASU_VERSION }}
+        id: bakasu_setup
         run: |
           cd kernel_workspace/kernel_platform
 
-          echo "正在配置 BakaSU 35227..."
+          echo "正在配置 BakaSU $BAKASU_VERSION..."
           curl -fLSs "https://raw.githubusercontent.com/Baka-SU/BakaSU/$BAKASU_COMMIT/kernel/setup.sh" -o "$RUNNER_TEMP/bakasu-setup.sh"
           bash "$RUNNER_TEMP/bakasu-setup.sh" "$BAKASU_COMMIT"
           if [ "$(git -C KernelSU rev-parse HEAD)" != "$BAKASU_COMMIT" ]; then
@@ -557,6 +574,10 @@ jobs:
           # 使用实际检出的提交计数，避免 main 更新导致版本号漂移。
           KSU_GIT_VERSION=$(git rev-list --count HEAD)
           KSU_VERSION=$((KSU_GIT_VERSION + 30700))
+          if [ "$KSU_VERSION" != "$BAKASU_VERSION" ]; then
+            echo "::error::BakaSU version $KSU_VERSION does not match selected $BAKASU_VERSION"
+            exit 1
+          fi
           # 存储版本号到 GitHub 环境变量
           echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
           echo "ksuver=$KSU_VERSION" >> $GITHUB_OUTPUT
