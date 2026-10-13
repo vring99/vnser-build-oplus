@@ -13,22 +13,20 @@ import bakasu_selinux as upstream
 
 
 class WorkflowTests(unittest.TestCase):
-    def test_both_build_paths_validate_before_compiling(self):
+    def test_both_build_paths_use_official_susfs_before_compiling(self):
         commands = []
         for name in ("build-kernel-original-make.yml", "Build Kernel OnePlus.yml"):
             with self.subTest(workflow=name):
                 workflow = yaml.safe_load((ROOT / ".github/workflows" / name).read_text(encoding="utf-8"))
                 job = workflow["jobs"]["load"]
                 self.assertEqual(job["env"]["BAKASU_COMMIT"], upstream.load_config()["commit"])
-                tool_commit = "c3299cf8d355d40e50239ab76e3caf9814a01491"
-                self.assertEqual(job["env"]["BAKASU_TOOLS_COMMIT"], tool_commit)
+                self.assertEqual(job["env"]["SUSFS_KSU_COMMIT"], upstream.load_config()["susfs_ksu_commit"])
+                self.assertNotIn("BAKASU_TOOLS_COMMIT", job["env"])
                 steps = job["steps"]
-                prepare = next(s for s in steps if s["name"] == "Prepare BakaSU integration tools")
-                setup = next(s for s in steps if s["name"] == "Add BakaSU 35226")
+                setup = next(s for s in steps if s["name"] == "Add BakaSU 35227")
                 patch = next(s for s in steps if s["name"] == "Apply Patches SukiSU Ultra")
-                verify = next(s for s in steps if s["name"] == "Validate BakaSU SUSFS integration")
+                verify = next(s for s in steps if s.get("id") == "bakasu_susfs_setup")
                 build = next(s for s in steps if s.get("id") == "fast_build")
-                self.assertLess(steps.index(prepare), steps.index(setup))
                 self.assertLess(steps.index(setup), steps.index(patch))
                 self.assertLess(steps.index(patch), steps.index(verify))
                 self.assertLess(steps.index(verify), steps.index(build))
@@ -37,28 +35,20 @@ class WorkflowTests(unittest.TestCase):
                 self.assertIn('bash "$RUNNER_TEMP/bakasu-setup.sh" "$BAKASU_COMMIT"', setup["run"])
                 self.assertIn('git -C KernelSU rev-parse HEAD', setup["run"])
                 self.assertIn('git rev-list --count HEAD', setup["run"])
-                self.assertIn('check-source', setup["run"])
-                for path in ("scripts/bakasu_selinux.py", "scripts/bakasu_35188_selinux.py",
-                             "config/bakasu.json", "config/bakasu-35188-selinux.json"):
-                    self.assertIn(path, prepare["run"])
-                self.assertIn('https://raw.githubusercontent.com/vring99/vnser-build-oplus/$BAKASU_TOOLS_COMMIT/$file',
-                              prepare["run"])
-                self.assertIn('"BAKASU_TOOLS_DIR=$TOOL_ROOT" >> "$GITHUB_ENV"', prepare["run"])
-                self.assertIn('python3 "$TOOL_ROOT/scripts/bakasu_selinux.py" --help', prepare["run"])
                 calls = setup["run"] + patch["run"] + verify["run"]
-                self.assertEqual(calls.count('$BAKASU_TOOLS_DIR/scripts/bakasu_selinux.py'), 3)
-                self.assertNotIn('GITHUB_WORKSPACE/scripts/bakasu_selinux.py', calls)
+                self.assertNotIn('bakasu_selinux.py', calls)
                 self.assertNotIn('|| true', setup["run"] + verify["run"])
-                self.assertIn('filter-susfs', patch["run"])
-                self.assertIn('--output "${SUSFS_PATCH}.bakasu"', patch["run"])
-                self.assertIn('patch -p1 < "${SUSFS_PATCH}.bakasu"', patch["run"])
+                self.assertNotIn('filter-susfs', patch["run"])
+                self.assertNotIn('.bakasu', patch["run"])
+                self.assertIn('patch -p1 < "$SUSFS_PATCH"', patch["run"])
                 self.assertIn('--enable KALLSYMS --enable KALLSYMS_ALL', verify["run"])
-                self.assertIn('--susfs true', verify["run"])
+                self.assertIn('--include=kernel/feature/selinux_hide.c', verify["run"])
                 runs = "\n".join(s.get("run", "") for s in steps)
                 self.assertNotIn('resukisu_35188_selinux.py', calls)
                 self.assertIn('CONFIG_CMDLINE_EXTEND=y', runs)
                 self.assertIn('module_blacklist=inte', runs)
-                commands.append((prepare["run"], setup["run"], verify["run"]))
+                self.assertNotIn('BAKASU_TOOLS_DIR', runs)
+                commands.append((setup["run"], verify["run"]))
         self.assertEqual(commands[0], commands[1])
 
     def test_snapdragon_mtk_and_test_use_updated_builder(self):

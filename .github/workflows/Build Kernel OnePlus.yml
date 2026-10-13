@@ -69,8 +69,8 @@ jobs:
     name: ${{ inputs.SCHED  && ' [SCHED]' || '' }}${{ inputs.LSM  && ' [LSM]' || '' }}For ${{ inputs.FILE }} ${{ inputs.SUFFIX }}
     runs-on: ubuntu-latest
     env:
-      BAKASU_COMMIT: 59afa46b325126b12a48234063cd0c2a6b735b57
-      BAKASU_TOOLS_COMMIT: c3299cf8d355d40e50239ab76e3caf9814a01491
+      BAKASU_COMMIT: f4435f007b16f61705089ff982e3f981a6017979
+      SUSFS_KSU_COMMIT: 0a1f3ff71719fa2d6ec15f5568dac27fdb957fcc
       CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
       CCACHE_NOHASHDIR: "true"
       CCACHE_HARDLINK: "true"
@@ -88,21 +88,6 @@ jobs:
           remove-android: 'true'
           remove-haskell: 'true'
           remove-codeql: 'true'
-
-      - name: Prepare BakaSU integration tools
-        run: |
-          TOOL_ROOT="$RUNNER_TEMP/bakasu-tools"
-          mkdir -p "$TOOL_ROOT/scripts" "$TOOL_ROOT/config"
-          for file in \
-            scripts/bakasu_selinux.py \
-            scripts/bakasu_35188_selinux.py \
-            config/bakasu.json \
-            config/bakasu-35188-selinux.json; do
-            curl -fLSs "https://raw.githubusercontent.com/vring99/vnser-build-oplus/$BAKASU_TOOLS_COMMIT/$file" \
-              -o "$TOOL_ROOT/$file"
-          done
-          echo "BAKASU_TOOLS_DIR=$TOOL_ROOT" >> "$GITHUB_ENV"
-          python3 "$TOOL_ROOT/scripts/bakasu_selinux.py" --help >/dev/null
 
       - name: Extract OnePlus Manifest Info
         id: extract_info
@@ -509,18 +494,17 @@ jobs:
           done
           
 
-      - name: Add BakaSU 35226
+      - name: Add BakaSU 35227
         run: |
           cd kernel_workspace/kernel_platform
 
-          echo "正在配置 BakaSU 35226..."
+          echo "正在配置 BakaSU 35227..."
           curl -fLSs "https://raw.githubusercontent.com/Baka-SU/BakaSU/$BAKASU_COMMIT/kernel/setup.sh" -o "$RUNNER_TEMP/bakasu-setup.sh"
           bash "$RUNNER_TEMP/bakasu-setup.sh" "$BAKASU_COMMIT"
           if [ "$(git -C KernelSU rev-parse HEAD)" != "$BAKASU_COMMIT" ]; then
             echo "::error::BakaSU checkout does not match pinned commit $BAKASU_COMMIT"
             exit 1
           fi
-          python3 "$BAKASU_TOOLS_DIR/scripts/bakasu_selinux.py" check-source --ksu "$PWD/KernelSU"
           echo 'CONFIG_KSU_FULL_NAME_FORMAT="%TAG_NAME%-%COMMIT_SHA%@R"' >> ./common/arch/arm64/configs/gki_defconfig
           cd ./KernelSU
           # 使用实际检出的提交计数，避免 main 更新导致版本号漂移。
@@ -615,9 +599,7 @@ jobs:
           
           echo "正在打susfs补丁"
           SUSFS_PATCH="50_add_susfs_in_gki-${GKI_V}.patch"
-          python3 "$BAKASU_TOOLS_DIR/scripts/bakasu_selinux.py" filter-susfs \
-            --family "$GKI_V" --patch "$SUSFS_PATCH" --output "${SUSFS_PATCH}.bakasu"
-          patch -p1 < "${SUSFS_PATCH}.bakasu" || true
+          patch -p1 < "$SUSFS_PATCH" || true
           echo "susfs_patch完成"
           
           # Revert
@@ -995,15 +977,37 @@ jobs:
           echo "Disabling GPUEB for MTK kernel 5.10"
           sed -i '/obj-y.*gpueb/d' kernel_workspace/kernel-5.10/drivers/gpu/mediatek/Makefile
 
-      - name: Validate BakaSU SUSFS integration
+      - name: Use official SUSFS SELinux implementation
+        id: bakasu_susfs_setup
         run: |
           KERNEL_PLATFORM="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform"
           "$KERNEL_PLATFORM/common/scripts/config" \
             --file "$KERNEL_PLATFORM/common/arch/arm64/configs/gki_defconfig" \
             --enable KALLSYMS --enable KALLSYMS_ALL
-          python3 "$BAKASU_TOOLS_DIR/scripts/bakasu_selinux.py" integrate \
-            --ksu "$KERNEL_PLATFORM/KernelSU" --common "$KERNEL_PLATFORM/common" \
-            --family "${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}" --susfs true
+          KSU_SOURCE="$KERNEL_PLATFORM/KernelSU"
+          SUSFS_SOURCE="$GITHUB_WORKSPACE/kernel_workspace/susfs4ksu"
+          OFFICIAL_ROOT="$RUNNER_TEMP/susfs-official-selinux"
+          mkdir -p "$OFFICIAL_ROOT/kernel/feature"
+          curl -fLSs --retry 3 \
+            "https://raw.githubusercontent.com/tiann/KernelSU/$SUSFS_KSU_COMMIT/kernel/feature/selinux_hide.c" \
+            -o "$OFFICIAL_ROOT/kernel/feature/selinux_hide.c"
+          # Generate the official post-patch file without porting its code.
+          git -C "$OFFICIAL_ROOT" apply --include=kernel/feature/selinux_hide.c \
+            "$SUSFS_SOURCE/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch"
+          cp "$OFFICIAL_ROOT/kernel/feature/selinux_hide.c" "$KSU_SOURCE/kernel/feature/selinux_hide.c"
+          python3 - "$KSU_SOURCE/kernel/tools/susfs_compat.mk" <<'PY'
+          import sys
+          from pathlib import Path
+          path = Path(sys.argv[1])
+          source = path.read_text()
+          stop = ("$(info -- $(REPO_NAME): susfs has NOT update with latest KernelSU source)\n"
+                  "$(info -- $(REPO_NAME): Please wait simonpunk update)\n"
+                  "$(error Please wait susfs update.)")
+          if source.count(stop) != 1:
+              raise SystemExit("Unexpected BakaSU SUSFS build guard; source left unchanged")
+          path.write_text(source.replace(stop, "", 1))
+          print("Official SUSFS SELinux implementation installed; BakaSU build guard removed")
+          PY
 
       - name: Build Kernel FAST
         if: ${{ inputs.FAST_BUILD }}
