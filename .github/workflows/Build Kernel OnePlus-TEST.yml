@@ -2,6 +2,20 @@ name: oplus-bakasu-vring-test
 
 on:
   workflow_dispatch:  # This allows this workflow to be called from another workflow
+    inputs:
+      BAKASU_VERSION:
+        description: "BakaSU version"
+        required: false
+        type: choice
+        options:
+          - "35226"
+          - "35227"
+        default: "35226"
+      UNI:
+        description: "启用 Unicode 绕过修复"
+        required: false
+        type: boolean
+        default: false
 
 
 jobs:
@@ -38,6 +52,8 @@ jobs:
     secrets: inherit
     with:
       FILE: ${{ matrix.file }}
+      BAKASU_VERSION: ${{ inputs.BAKASU_VERSION || '35226' }}
+      UNI: ${{ inputs.UNI }}
       HOOK: "manual"
       SUSFS_CI: "NoN"
       KSU_META: "susfs-main/vring/"

@@ -33,7 +33,12 @@ on:
         type: string
         description: "BakaSU version (35227 or 35226)"
         required: false
-        default: "35227"
+        default: "35226"
+      UNI:
+        type: boolean
+        description: "启用 Unicode 绕过修复"
+        required: false
+        default: false
       BUILD_TIME:
         type: string
         description: "自定义构建时间 (输入F使用当前时间)"
@@ -237,6 +242,7 @@ jobs:
           echo "Selected FAST_BUILD: ${{ inputs.FAST_BUILD }}"
           echo "Selected SCHED: ${{ inputs.SCHED }}"
           echo "Selected ZRAM: ${{ inputs.ZRAM }}"
+          echo "Selected UNI: ${{ inputs.UNI }}"
           echo "-----------------------"
 
       - name: Check Disk Space
@@ -890,6 +896,7 @@ jobs:
           fi
 
       - name: Apply UNICODE_BYPASS and MEMORY_OPT
+        if: inputs.UNI
         run: |
           PATCH_DIR="${GITHUB_WORKSPACE}/kernel_workspace/Action-Build/patches"
           cd kernel_workspace/kernel_platform/common

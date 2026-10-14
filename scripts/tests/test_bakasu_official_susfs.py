@@ -43,11 +43,11 @@ class OfficialWorkflowTests(unittest.TestCase):
             bodies.append(step["run"].split('OFFICIAL_ROOT=', 1)[1])
         self.assertEqual(bodies[0], bodies[1])
 
-    def test_existing_callers_default_to_35227(self):
+    def test_existing_callers_default_to_35226(self):
         for name in WORKFLOWS:
             workflow = yaml.safe_load((ROOT / ".github/workflows" / name).read_text(encoding="utf-8"))
             inputs = workflow.get("on", workflow.get(True))["workflow_call"]["inputs"]
-            self.assertEqual(inputs[VERSION_INPUT]["default"], str(CONFIG["version_code"]))
+            self.assertEqual(inputs[VERSION_INPUT]["default"], "35226")
             self.assertFalse(inputs[VERSION_INPUT]["required"])
 
     def test_selectors_resolve_pins_and_reject_unknown_versions(self):
@@ -93,12 +93,30 @@ class OfficialWorkflowTests(unittest.TestCase):
                 self.assertFalse(job["with"]["use_kpm"])
             parent = yaml.safe_load((ROOT / job["uses"]).read_text(encoding="utf-8"))
             on = parent.get("on", parent.get(True))
-            self.assertEqual(on["workflow_call"]["inputs"][VERSION_INPUT]["default"], "35227")
-            self.assertEqual(on["workflow_dispatch"]["inputs"][VERSION_INPUT]["default"], "35227")
+            self.assertEqual(on["workflow_call"]["inputs"][VERSION_INPUT]["default"], "35226")
+            self.assertEqual(on["workflow_dispatch"]["inputs"][VERSION_INPUT]["default"], "35226")
             matrix_job = next(iter(parent["jobs"].values()))
             self.assertTrue(matrix_job["strategy"]["matrix"]["include"])
             self.assertEqual(matrix_job["with"][VERSION_INPUT],
-                             "${{ inputs." + VERSION_INPUT + " || '35227' }}")
+                             "${{ inputs." + VERSION_INPUT + " || '35226' }}")
+
+    def test_all_version_defaults_and_forwarding_select_35226(self):
+        for path in (ROOT / ".github/workflows").glob("*.yml"):
+            workflow = yaml.safe_load(path.read_text(encoding="utf-8"))
+            on = workflow.get("on", workflow.get(True, {}))
+            for event in ("workflow_dispatch", "workflow_call"):
+                schema = (on.get(event) or {}).get("inputs", {}).get(VERSION_INPUT)
+                if schema is not None:
+                    with self.subTest(workflow=path.name, event=event):
+                        self.assertEqual(schema["default"], "35226")
+                        if schema["type"] == "choice":
+                            self.assertEqual(set(schema["options"]), {"35226", "35227"})
+            for job in workflow.get("jobs", {}).values():
+                selected = job.get("with", {}).get(VERSION_INPUT)
+                if selected is not None:
+                    with self.subTest(workflow=path.name, selected=selected):
+                        self.assertIn(selected, ("35226", "${{ inputs." + VERSION_INPUT + " }}",
+                                                 "${{ inputs." + VERSION_INPUT + " || '35226' }}"))
 
 
 @unittest.skipUnless(os.environ.get("BAKASU_TEST_SOURCE") and os.environ.get("SUSFS_TEST_SOURCE"),

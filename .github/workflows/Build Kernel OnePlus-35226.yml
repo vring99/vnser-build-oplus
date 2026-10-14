@@ -6,6 +6,12 @@ permissions:
 
 on:
   workflow_dispatch:
+    inputs:
+      UNI:
+        description: "启用 Unicode 绕过修复"
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: oplus-bakasu-35226-${{ github.ref }}
@@ -18,6 +24,7 @@ jobs:
     secrets: inherit
     with:
       BAKASU_VERSION: "35226"
+      UNI: ${{ inputs.UNI }}
 
   mtk:
     name: "BakaSU 35226 / MTK"
@@ -25,3 +32,4 @@ jobs:
     secrets: inherit
     with:
       BAKASU_VERSION: "35226"
+      UNI: ${{ inputs.UNI }}

@@ -10,13 +10,22 @@ on:
         options:
           - "35227"
           - "35226"
-        default: "35227"
+        default: "35226"
+      UNI:
+        description: "启用 Unicode 绕过修复"
+        required: false
+        type: boolean
+        default: false
   workflow_call:
     inputs:
       BAKASU_VERSION:
         required: false
         type: string
-        default: "35227"
+        default: "35226"
+      UNI:
+        required: false
+        type: boolean
+        default: false
 
 
 jobs:
@@ -279,7 +288,8 @@ jobs:
     secrets: inherit
     with:
       FILE: ${{ matrix.file }}
-      BAKASU_VERSION: ${{ inputs.BAKASU_VERSION || '35227' }}
+      BAKASU_VERSION: ${{ inputs.BAKASU_VERSION || '35226' }}
+      UNI: ${{ inputs.UNI }}
       HOOK: "manual"
       SUSFS_CI: "CI"
       KSU_META: "susfs-main/vring/"
