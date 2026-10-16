@@ -4,13 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       BAKASU_VERSION:
-        description: "BakaSU version"
+        description: "BakaSU Pro version"
         required: false
         type: choice
         options:
-          - "35227"
-          - "35226"
-        default: "35226"
+          - "35233"
+        default: "35233"
       UNI:
         description: "启用 Unicode 绕过修复"
         required: false
@@ -21,7 +20,7 @@ on:
       BAKASU_VERSION:
         required: false
         type: string
-        default: "35226"
+        default: "35233"
       UNI:
         required: false
         type: boolean
@@ -288,7 +287,7 @@ jobs:
     secrets: inherit
     with:
       FILE: ${{ matrix.file }}
-      BAKASU_VERSION: ${{ inputs.BAKASU_VERSION || '35226' }}
+      BAKASU_VERSION: ${{ inputs.BAKASU_VERSION || '35233' }}
       UNI: ${{ inputs.UNI }}
       HOOK: "manual"
       SUSFS_CI: "CI"

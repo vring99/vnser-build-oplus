@@ -4,13 +4,12 @@ on:
   workflow_dispatch:  # This allows this workflow to be called from another workflow
     inputs:
       BAKASU_VERSION:
-        description: "BakaSU version"
+        description: "BakaSU Pro version"
         required: false
         type: choice
         options:
-          - "35226"
-          - "35227"
-        default: "35226"
+          - "35233"
+        default: "35233"
       UNI:
         description: "启用 Unicode 绕过修复"
         required: false
@@ -52,7 +51,7 @@ jobs:
     secrets: inherit
     with:
       FILE: ${{ matrix.file }}
-      BAKASU_VERSION: ${{ inputs.BAKASU_VERSION || '35226' }}
+      BAKASU_VERSION: ${{ inputs.BAKASU_VERSION || '35233' }}
       UNI: ${{ inputs.UNI }}
       HOOK: "manual"
       SUSFS_CI: "NoN"
