@@ -21,6 +21,18 @@ def callees(workflow):
 
 
 class UnicodeToggleTests(unittest.TestCase):
+    def test_pro_workflow_names_and_cleanup_choices_match(self):
+        names = {workflow["name"] for workflow in self.workflows.values()}
+        cleanup = events(self.workflows["delete.yml"])["workflow_dispatch"]["inputs"]
+        choices = next(schema["options"] for schema in cleanup.values() if "options" in schema)
+        for choice in choices:
+            self.assertIn("bakasu-pro", choice)
+            self.assertIn(choice, names)
+        for name in BUILDERS:
+            steps = self.workflows[name]["jobs"]["load"]["steps"]
+            artifact = next(step for step in steps if step.get("name") == "Upload AnyKernel3")
+            self.assertTrue(artifact["with"]["name"].startswith("BakaSU-Pro-"))
+
     @classmethod
     def setUpClass(cls):
         cls.workflows = {
@@ -42,10 +54,10 @@ class UnicodeToggleTests(unittest.TestCase):
         schema = (events(workflow)[event] or {}).get("inputs", {}).get("UNI")
         self.assertIsNotNone(schema, f"missing {event} Unicode toggle")
         self.assertEqual(schema["type"], "boolean")
-        self.assertIs(schema.get("default"), False)
+        self.assertIs(schema.get("default"), True)
         self.assertFalse(schema.get("required", False))
 
-    def test_both_builders_disable_unicode_by_default(self):
+    def test_both_builders_enable_unicode_by_default(self):
         for name in BUILDERS:
             with self.subTest(workflow=name):
                 self.assert_toggle_schema(self.workflows[name], "workflow_call")

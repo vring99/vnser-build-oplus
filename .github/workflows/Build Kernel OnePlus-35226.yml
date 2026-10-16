@@ -1,4 +1,4 @@
-name: oplus-bakasu-35233-susfs-all
+name: oplus-bakasu-pro-35233-susfs-all
 
 permissions:
   contents: write
@@ -11,10 +11,10 @@ on:
         description: "启用 Unicode 绕过修复"
         required: false
         type: boolean
-        default: false
+        default: true
 
 concurrency:
-  group: oplus-bakasu-35233-${{ github.ref }}
+  group: oplus-bakasu-pro-35233-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

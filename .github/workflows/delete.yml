@@ -7,11 +7,11 @@ on:
         type: choice
         description: '清理的工作流名称'
         required: true
-        default: 'oplus-bakasu-vring-mtk'
+        default: 'oplus-bakasu-pro-vring-mtk'
         options:
-          - oplus-bakasu-vring-mtk
-          - oplus-bakasu-vring-snapdragon
-          - oplus-bakasu-vring-test
+          - oplus-bakasu-pro-vring-mtk
+          - oplus-bakasu-pro-vring-snapdragon
+          - oplus-bakasu-pro-vring-test
       count:
         description: '最多访问的运行次数'
         required: false

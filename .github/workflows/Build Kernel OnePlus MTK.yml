@@ -1,4 +1,4 @@
-name:  oplus-bakasu-vring-mtk
+name:  oplus-bakasu-pro-vring-mtk
 
 on:
   workflow_dispatch:
@@ -14,7 +14,7 @@ on:
         description: "启用 Unicode 绕过修复"
         required: false
         type: boolean
-        default: false
+        default: true
   workflow_call:
     inputs:
       BAKASU_VERSION:
@@ -24,7 +24,7 @@ on:
       UNI:
         required: false
         type: boolean
-        default: false
+        default: true
 
 
 jobs:

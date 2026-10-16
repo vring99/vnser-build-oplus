@@ -38,7 +38,7 @@ on:
         type: boolean
         description: "启用 Unicode 绕过修复"
         required: false
-        default: false
+        default: true
       BUILD_TIME:
         type: string
         description: "自定义构建时间 (输入F使用当前时间)"
@@ -93,7 +93,7 @@ jobs:
             *) echo "::error::Unsupported BakaSU Pro version: $BAKASU_VERSION"; exit 1 ;;
           esac
           echo "BAKASU_COMMIT=$commit" >> "$GITHUB_ENV"
-          echo "BakaSU $BAKASU_VERSION: $commit"
+          echo "BakaSU Pro $BAKASU_VERSION: $commit"
 
       - name: Checkout
         uses: actions/checkout@v6
@@ -561,16 +561,16 @@ jobs:
           done
           
 
-      - name: Add BakaSU ${{ inputs.BAKASU_VERSION }}
+      - name: Add BakaSU Pro ${{ inputs.BAKASU_VERSION }}
         id: bakasu_setup
         run: |
           cd kernel_workspace/kernel_platform
 
-          echo "正在配置 BakaSU $BAKASU_VERSION..."
+          echo "正在配置 BakaSU Pro $BAKASU_VERSION..."
           curl -fLSs "https://raw.githubusercontent.com/vring99/BakaSU/$BAKASU_COMMIT/kernel/setup.sh" -o "$RUNNER_TEMP/bakasu-setup.sh"
           bash "$RUNNER_TEMP/bakasu-setup.sh" "$BAKASU_COMMIT"
           if [ "$(git -C KernelSU rev-parse HEAD)" != "$BAKASU_COMMIT" ]; then
-            echo "::error::BakaSU checkout does not match pinned commit $BAKASU_COMMIT"
+            echo "::error::BakaSU Pro checkout does not match pinned commit $BAKASU_COMMIT"
             exit 1
           fi
           echo 'CONFIG_KSU_FULL_NAME_FORMAT="%TAG_NAME%-%COMMIT_SHA%@R"' >> ./common/arch/arm64/configs/gki_defconfig
@@ -771,7 +771,7 @@ jobs:
               sed -i '/#include <linux\/dma-buf.h>/a #include <linux\/susfs_def.h>' ./fs/proc/base.c
               sed -i '/#include <linux\/dma-buf.h>/a #ifdef CONFIG_KSU_SUSFS_SUS_MAP' ./fs/proc/base.c
             fi
-            # 修复 BakaSU: 缺少 susfs.h 导致编译报 undeclared identifier
+            # 修复 BakaSU Pro: 缺少 susfs.h 导致编译报 undeclared identifier
             if grep -q 'SUSFS_IS_INODE_SUS_MAP\|SUSFS_IS_INODE_OPEN_REDIRECT' ./fs/proc/base.c && ! grep -qF '#include <linux/susfs.h>' ./fs/proc/base.c; then
               if ! grep -qF '#include <linux/dma-buf.h>' ./fs/proc/base.c; then
                 sed -i '/#include <linux\/cpufreq_times.h>/a #include <linux\/dma-buf.h>' ./fs/proc/base.c
@@ -1287,7 +1287,7 @@ jobs:
       - name: Upload AnyKernel3
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.KSUVER }}-${{ steps.extract_info.outputs.value }}-${{ env.TKERNEL_VERSION }}${{ steps.suffix.outputs.value }}
+          name: BakaSU-Pro-${{ env.KSUVER }}-${{ steps.extract_info.outputs.value }}-${{ env.TKERNEL_VERSION }}${{ steps.suffix.outputs.value }}
           path: ./AnyKernel3/*
 
       - name: Download and Unzip ZRAM
