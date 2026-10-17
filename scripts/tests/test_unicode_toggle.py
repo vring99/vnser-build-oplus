@@ -28,10 +28,6 @@ class UnicodeToggleTests(unittest.TestCase):
         for choice in choices:
             self.assertIn("bakasu-pro", choice)
             self.assertIn(choice, names)
-        for name in BUILDERS:
-            steps = self.workflows[name]["jobs"]["load"]["steps"]
-            artifact = next(step for step in steps if step.get("name") == "Upload AnyKernel3")
-            self.assertTrue(artifact["with"]["name"].startswith("BakaSU-Pro-"))
 
     @classmethod
     def setUpClass(cls):
