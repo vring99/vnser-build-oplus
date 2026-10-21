@@ -719,6 +719,25 @@ jobs:
           
           # Android 14 - 6.1 修复
           if [[ "$GKI_V" == "android14-6.1" ]]; then
+            # Recover declarations when only the namespace header hunk was rejected.
+            if grep -q 'DEFAULT_KSU_MNT_ID\|VFSMOUNT_MNT_FLAGS_KSU_UNSHARED_MNT\|susfs_is_current_ksu_domain\|CL_COPY_MNT_NS' ./fs/namespace.c; then
+              if ! grep -qF '#include <linux/susfs_def.h>' ./fs/namespace.c; then
+                if grep -qF '#include <linux/mnt_idmapping.h>' ./fs/namespace.c; then
+                  sed -i '/#include <linux\/mnt_idmapping.h>/a #ifdef CONFIG_KSU_SUSFS\n#include <linux\/susfs_def.h>\n#endif' ./fs/namespace.c
+                else
+                  sed -i '/#include "internal.h"/i #ifdef CONFIG_KSU_SUSFS\n#include <linux\/susfs_def.h>\n#endif\n' ./fs/namespace.c
+                fi
+              fi
+              if ! grep -q 'extern bool susfs_is_current_ksu_domain' ./fs/namespace.c; then
+                sed -i '/#include "internal.h"/a #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT\nextern bool susfs_is_current_ksu_domain(void);\n#endif' ./fs/namespace.c
+              fi
+              if ! grep -qF 'extern struct static_key_true susfs_is_sdcard_android_data_not_decrypted;' ./fs/namespace.c; then
+                sed -i '/#include "internal.h"/a #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT\nextern struct static_key_true susfs_is_sdcard_android_data_not_decrypted;\n#endif' ./fs/namespace.c
+              fi
+              if ! grep -qF '#define CL_COPY_MNT_NS ' ./fs/namespace.c; then
+                sed -i '/#include "internal.h"/a #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT\n#define CL_COPY_MNT_NS BIT(25)\n#endif' ./fs/namespace.c
+              fi
+            fi
             if [[ "$CURRENT_SUB" -le 141 || "$CURRENT_SUB" -ge 145 ]]; then
               cp $KERNEL_PATCHES/wild/archived/susfs_fix_patches/v${SUSFS_VERSION}/a14-6.1/base.c.patch ./
               patch -p1 < base.c.patch || true
@@ -1101,13 +1120,10 @@ jobs:
           
           cd ./common
           
-          curl -L "https://raw.githubusercontent.com/cctv18/android_gki_kernel_common/refs/heads/android16-6.12-2025-06/_setup_env.sh" -o ./_setup_env.sh || true
-          
-          #source "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/build/kernel/_setup_env.sh" 2>/dev/null || true
-          
-          source "./_setup_env.sh" 2>/dev/null || true
-          
-          
+          # Direct Make uses repo tools; Kleaf setup would overwrite paths and BUILD_TIME.
+          export TZ=UTC LC_ALL=C
+          export KBUILD_BUILD_HOST=build-host KBUILD_BUILD_USER=build-user
+          export KBUILD_GENDWARFKSYMS_STABLE=1
           export PATH="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$CLANG_PREBUILT_BIN:$PATH"
           export PATH="/usr/lib/ccache:$PATH"
           
