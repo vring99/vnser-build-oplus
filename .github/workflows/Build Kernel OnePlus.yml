@@ -669,6 +669,32 @@ jobs:
               fi
           fi
           if [[ "$GKI_V" == "android13-5.15" ]]; then 
+            # 5.15.74~206: recover declarations skipped by the upstream header hunk.
+            if [[ "$CURRENT_SUB" -ge 74 && "$CURRENT_SUB" -le 206 ]] && grep -q 'DEFAULT_KSU_MNT_ID\|VFSMOUNT_MNT_FLAGS_KSU_UNSHARED_MNT\|susfs_is_current_ksu_domain\|CL_COPY_MNT_NS' ./fs/namespace.c; then
+              if ! grep -qF '#include <linux/susfs_def.h>' ./fs/namespace.c; then
+                if grep -qF '#include <linux/mnt_idmapping.h>' ./fs/namespace.c; then
+                  sed -i '/#include <linux\/mnt_idmapping.h>/a #ifdef CONFIG_KSU_SUSFS\n#include <linux\/susfs_def.h>\n#endif' ./fs/namespace.c
+                else
+                  sed -i '/#include "internal.h"/i #ifdef CONFIG_KSU_SUSFS\n#include <linux\/susfs_def.h>\n#endif\n' ./fs/namespace.c
+                fi
+              fi
+              if ! grep -q 'extern bool susfs_is_current_ksu_domain' ./fs/namespace.c; then
+                sed -i '/#include "internal.h"/a #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT\nextern bool susfs_is_current_ksu_domain(void);\n#endif' ./fs/namespace.c
+              fi
+              if ! grep -qF 'extern struct static_key_true susfs_is_sdcard_android_data_not_decrypted;' ./fs/namespace.c; then
+                sed -i '/#include "internal.h"/a #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT\nextern struct static_key_true susfs_is_sdcard_android_data_not_decrypted;\n#endif' ./fs/namespace.c
+              fi
+              if ! grep -qF '#define CL_COPY_MNT_NS ' ./fs/namespace.c; then
+                sed -i '/#include "internal.h"/a #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT\n#define CL_COPY_MNT_NS BIT(25)\n#endif' ./fs/namespace.c
+              fi
+            fi
+            if [[ "$CURRENT_SUB" -ge 74 && "$CURRENT_SUB" -le 206 ]] && grep -q 'SUSFS_IS_INODE_SUS_MAP\|SUSFS_IS_INODE_OPEN_REDIRECT' ./fs/proc/task_mmu.c && ! grep -qF '#include <linux/susfs_def.h>' ./fs/proc/task_mmu.c; then
+              if grep -qF '#include <linux/sched/sysctl.h>' ./fs/proc/task_mmu.c; then
+                sed -i '/#include <linux\/sched\/sysctl.h>/a #if defined(CONFIG_KSU_SUSFS_SUS_MAP) || defined(CONFIG_KSU_SUSFS_OPEN_REDIRECT)\n#include <linux\/susfs_def.h>\n#endif' ./fs/proc/task_mmu.c
+              else
+                sed -i '/#include <linux\/sched\/mm.h>/a #if defined(CONFIG_KSU_SUSFS_SUS_MAP) || defined(CONFIG_KSU_SUSFS_OPEN_REDIRECT)\n#include <linux\/susfs_def.h>\n#endif' ./fs/proc/task_mmu.c
+              fi
+            fi
             #if [[ "$CURRENT_SUB" -gt 167 ]]; then
               # memory.c
           
@@ -747,8 +773,8 @@ jobs:
 
           # Android 16 - 6.12 修复
           if [[ "$GKI_V" == "android16-6.12" ]]; then
-            # 6.12.58 及以上的 exec.c 可能缺少 SUSFS 头文件，导致 no_su 等函数未声明
-            if [[ "$CURRENT_SUB" -ge 58 ]] && grep -q 'susfs_is_current_proc_umounted\|susfs_is_current_proc_no_su' ./fs/exec.c && ! grep -qF '#include <linux/susfs_def.h>' ./fs/exec.c; then
+            # 6.12.23 及以上的 exec.c 可能缺少 SUSFS 头文件，导致 no_su 等函数未声明
+            if [[ "$CURRENT_SUB" -ge 23 ]] && grep -q 'susfs_is_current_proc_umounted\|susfs_is_current_proc_no_su' ./fs/exec.c && ! grep -qF '#include <linux/susfs_def.h>' ./fs/exec.c; then
               if grep -qF '#include <linux/dma-buf.h>' ./fs/exec.c; then
                 sed -i '/#include <linux\/dma-buf.h>/a #ifdef CONFIG_KSU_SUSFS\n#include <linux\/susfs_def.h>\n#endif' ./fs/exec.c
               else
