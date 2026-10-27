@@ -11,7 +11,7 @@ WF = ROOT / ".github/workflows"
 GKI = (WF / "build.yml").exists()
 BUILDERS = ("build.yml", "build-make.yml") if GKI else ("Build Kernel OnePlus.yml", "build-kernel-original-make.yml")
 INPUT = "bakasu_version" if GKI else "BAKASU_VERSION"
-PIN = "150a0b559f0d75145505297129fb68f0f42f5823"
+PIN = "54983206d0aa820374144101f8401c85a5ab9a34"
 BASH = os.environ.get("BAKASU_TEST_BASH", "bash")
 
 def read(name):
@@ -25,14 +25,14 @@ class ProWorkflowTests(unittest.TestCase):
             for event in ("workflow_call", "workflow_dispatch"):
                 schema = (events.get(event) or {}).get("inputs", {}).get(INPUT)
                 if schema:
-                    self.assertEqual(schema["default"], "35240", path.name)
+                    self.assertEqual(schema["default"], "35268", path.name)
                     if schema["type"] == "choice":
-                        self.assertEqual(schema["options"], ["35240"])
+                        self.assertEqual(schema["options"], ["35268"])
             for job in workflow.get("jobs", {}).values():
                 selected = job.get("with", {}).get(INPUT)
                 if selected:
-                    self.assertIn(selected, ("35240", "${{ inputs." + INPUT + " }}",
-                                             "${{ inputs." + INPUT + " || '35240' }}"))
+                    self.assertIn(selected, ("35268", "${{ inputs." + INPUT + " }}",
+                                             "${{ inputs." + INPUT + " || '35268' }}"))
 
     def test_builders_use_native_source_without_overwriting_it(self):
         for name in BUILDERS:
@@ -57,14 +57,14 @@ class ProWorkflowTests(unittest.TestCase):
         for name in BUILDERS:
             job = next(iter(read(name)["jobs"].values()))
             selector = next(s for s in job["steps"] if s.get("id") == "bakasu_version")
-            for version in ("35240", "35239", "35238", "35237", "35236", "35235", "35226", "35227", "35266", ""):
+            for version in ("35268", "35240", "35239", "35238", "35237", "35236", "35235", "35226", "35227", "35266", ""):
                 with tempfile.TemporaryDirectory() as directory:
                     path = Path(directory) / "env"
                     path.touch()
                     result = subprocess.run([BASH, "-e", "-c", selector["run"]], capture_output=True,
                         env=dict(os.environ, BAKASU_VERSION=version, GITHUB_ENV=path.as_posix()))
-                    self.assertEqual(result.returncode == 0, version == "35240", result.stderr)
-                    if version == "35240":
+                    self.assertEqual(result.returncode == 0, version == "35268", result.stderr)
+                    if version == "35268":
                         self.assertEqual(path.read_text().strip(), "BAKASU_COMMIT=" + PIN)
 
     @unittest.skipUnless(GKI, "GKI manager workflow only")
@@ -83,7 +83,7 @@ class ProWorkflowTests(unittest.TestCase):
         jobs = read(name)["jobs"]
         self.assertEqual(len(jobs), 5 if GKI else 2)
         for job in jobs.values():
-            self.assertEqual(job["with"][INPUT], "35240")
+            self.assertEqual(job["with"][INPUT], "35268")
             if GKI and job["uses"].endswith(("kernel-a15-6-6.yml", "kernel-a16-6-12.yml")):
                 self.assertIs(job["with"]["use_zram"], False)
             if GKI and job["uses"].endswith("kernel-a12-5-10.yml"):
