@@ -1,0 +1,59 @@
+name: oplus-bakasu-pro-vring-6.12
+
+on:
+  workflow_dispatch:
+    inputs:
+      BAKASU_VERSION:
+        description: "BakaSU Pro version"
+        required: false
+        type: choice
+        options:
+          - "35270"
+        default: "35270"
+      UNI:
+        description: "Enable Unicode compatibility fix"
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  vring-bakasu-6-12:
+    name: "${{ matrix.file }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - file: oneplus_ace_6t_Canary
+            sched: false
+            ipv6: true
+          - file: oneplus_15_Canary
+            sched: false
+            ipv6: true
+          - file: oneplus_15t_Canary
+            sched: false
+            ipv6: true
+          - file: oneplus_pad_4_Canary
+            sched: false
+            ipv6: true
+          - file: oneplus_pad_3_pro_Canary
+            sched: false
+            ipv6: true
+          - file: oneplus_ace6_ultra_vring
+            sched: false
+            ipv6: false
+
+    uses: ./.github/workflows/build-kernel-original-make.yml
+    secrets: inherit
+    with:
+      FILE: ${{ matrix.file }}
+      BAKASU_VERSION: ${{ inputs.BAKASU_VERSION || '35270' }}
+      UNI: ${{ inputs.UNI }}
+      HOOK: "manual"
+      SUSFS_CI: "CI"
+      KSU_META: "susfs-main/vring/"
+      BUILD_TIME: "Mon Aug 18 09:30:24 UTC 2024"
+      SCHED: ${{ matrix.sched }}
+      ZRAM: false
+      LSM: true
+      FAST_BUILD: true
+      IPV6: ${{ matrix.ipv6 }}
