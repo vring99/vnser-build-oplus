@@ -479,6 +479,9 @@ jobs:
           
           # 生成随机数字和随机hash
           RANDOM_DIGIT=$(od -An -N1 -tu1 < /dev/urandom | tr -d '[:space:]' | awk '{print $1 % 11}')
+          if [ "${{ env.KERNEL_VERSION }}" = "6.12" ]; then
+            RANDOM_DIGIT=$(python3 "$GITHUB_WORKSPACE/scripts/read_kmi_generation.py" kernel_platform/common)
+          fi
           RANDOM_HASH=$(od -An -N7 -tx1 /dev/urandom | tr -d ' \n')
           RANDOM_SUFFIX="${RANDOM_DIGIT}-o-g${RANDOM_HASH}"
           

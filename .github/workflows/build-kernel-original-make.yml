@@ -445,9 +445,10 @@ jobs:
             AB_PART=$(printf "%09d" $(( $(od -An -N4 -tu4 /dev/urandom) % 1000000000 )))
             VERSION_SUFFIX="8-g${GIT_PART}-abogki${AB_PART}-4k"
           elif [ "$KERNEL_VERSION" = "6.12" ]; then
+            KMI_GENERATION=$(python3 "$GITHUB_WORKSPACE/scripts/read_kmi_generation.py" kernel_platform/common)
             GIT_PART=$(od -An -N6 -tx1 /dev/urandom | tr -d ' \n')
             AB_PART=$(printf "%08d" $(( $(od -An -N4 -tu4 /dev/urandom) % 100000000 )))
-            VERSION_SUFFIX="5-g${GIT_PART}-ab${AB_PART}-4k"
+            VERSION_SUFFIX="${KMI_GENERATION}-g${GIT_PART}-ab${AB_PART}-4k"
           else
             VERSION_SUFFIX="$SUFFIX"
           fi
@@ -519,9 +520,10 @@ jobs:
             AB_PART=$(printf "%09d" $(( $(od -An -N4 -tu4 /dev/urandom) % 1000000000 )))
             RANDOM_SUFFIX="8-g${GIT_PART}-abogki${AB_PART}-4k"
           elif [ "$KERNEL_VERSION" = "6.12" ]; then
+            KMI_GENERATION=$(python3 "$GITHUB_WORKSPACE/scripts/read_kmi_generation.py" kernel_platform/common)
             GIT_PART=$(od -An -N6 -tx1 /dev/urandom | tr -d ' \n')
             AB_PART=$(printf "%08d" $(( $(od -An -N4 -tu4 /dev/urandom) % 100000000 )))
-            RANDOM_SUFFIX="5-g${GIT_PART}-ab${AB_PART}-4k"
+            RANDOM_SUFFIX="${KMI_GENERATION}-g${GIT_PART}-ab${AB_PART}-4k"
           fi
           
          
