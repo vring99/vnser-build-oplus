@@ -15,6 +15,25 @@ def read_builder(filename):
 
 
 class BuildEnvironmentTests(unittest.TestCase):
+    def test_checkout_follows_workspace_mount_before_repository_use(self):
+        for filename in BUILDERS:
+            with self.subTest(workflow=filename):
+                steps = read_builder(filename)["steps"]
+                mounts = [index for index, step in enumerate(steps)
+                          if step.get("uses", "").startswith("easimon/maximize-build-space@")]
+                checkouts = [index for index, step in enumerate(steps)
+                             if step.get("uses", "").startswith("actions/checkout@")]
+                self.assertEqual(len(mounts), 1)
+                self.assertEqual(len(checkouts), 1)
+                self.assertLess(mounts[0], checkouts[0])
+                manifest = next(index for index, step in enumerate(steps)
+                                if step.get("name") == "Extract OnePlus Manifest Info")
+                self.assertLess(checkouts[0], manifest)
+                check = steps[checkouts[0] + 1]
+                self.assertEqual(check["name"], "Verify build helpers")
+                self.assertIn('test -s "$GITHUB_WORKSPACE/scripts/read_kmi_generation.py"',
+                              check["run"])
+
     def test_kernel_builders_pin_ubuntu_2404(self):
         for filename in BUILDERS:
             with self.subTest(workflow=filename):

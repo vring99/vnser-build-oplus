@@ -96,9 +96,7 @@ jobs:
           echo "BAKASU_COMMIT=$commit" >> "$GITHUB_ENV"
           echo "BakaSU Pro $BAKASU_VERSION: $commit"
 
-      - name: Checkout
-        uses: actions/checkout@v6
-
+      # Mount the build volume before checkout so repository files stay visible.
       - name: Maximize Build Space
         uses: easimon/maximize-build-space@master
         with:
@@ -108,6 +106,16 @@ jobs:
           remove-android: 'true'
           remove-haskell: 'true'
           remove-codeql: 'true'
+
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Verify build helpers
+        run: |
+          test -s "$GITHUB_WORKSPACE/scripts/read_kmi_generation.py" || {
+            echo "::error::KMI helper missing after checkout; check workspace mount order"
+            exit 1
+          }
 
       - name: Extract OnePlus Manifest Info
         id: extract_info
