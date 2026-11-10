@@ -24,8 +24,8 @@ class Kernel612WorkflowTests(unittest.TestCase):
     def test_only_requested_devices_and_version(self):
         workflow = read("Build Kernel OnePlus-6.12.yml")
         inputs = workflow.get("on", workflow.get(True))["workflow_dispatch"]["inputs"]
-        self.assertEqual(inputs["BAKASU_VERSION"]["default"], "35270")
-        self.assertEqual(inputs["BAKASU_VERSION"]["options"], ["35270"])
+        self.assertEqual(inputs["BAKASU_VERSION"]["default"], "35273")
+        self.assertEqual(inputs["BAKASU_VERSION"]["options"], ["35273"])
         self.assertTrue(inputs["UNI"]["default"])
         self.assertEqual(len(workflow["jobs"]), 1)
         job = next(iter(workflow["jobs"].values()))
