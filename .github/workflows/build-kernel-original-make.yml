@@ -950,6 +950,10 @@ jobs:
             exit 12
           fi
 
+      - name: Fix optional SUSFS credential helper warnings
+        id: susfs_cred_compat
+        run: python3 "$GITHUB_WORKSPACE/scripts/susfs_cred_compat.py" "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/common"
+
       - name: Apply UNICODE_BYPASS and MEMORY_OPT
         if: inputs.UNI
         run: |
