@@ -8,8 +8,8 @@ on:
         required: false
         type: choice
         options:
-          - "35273"
-        default: "35273"
+          - "35275"
+        default: "35275"
       UNI:
         description: "Enable Unicode compatibility fix"
         required: false
@@ -46,7 +46,7 @@ jobs:
     secrets: inherit
     with:
       FILE: ${{ matrix.file }}
-      BAKASU_VERSION: ${{ inputs.BAKASU_VERSION || '35273' }}
+      BAKASU_VERSION: ${{ inputs.BAKASU_VERSION || '35275' }}
       UNI: ${{ inputs.UNI }}
       HOOK: "manual"
       SUSFS_CI: "CI"
